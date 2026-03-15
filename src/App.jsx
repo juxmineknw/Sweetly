@@ -131,11 +131,11 @@ function App() {
   };
 
   return (
-    <div className="bg-[#f0f2f5] min-h-screen flex justify-center font-sans">
-      <div className="w-full max-w-md bg-linear-to-b from-[#fdfbfb] to-[#ebedee] min-h-screen flex flex-col relative shadow-[0_0_50px_rgba(0,0,0,0.1)] overflow-hidden">
+    <div className="bg-[#f0f2f5] h-dvh flex justify-center font-sans overflow-hidden">
+      <div className="w-full max-w-md bg-linear-to-b from-[#fdfbfb] to-[#ebedee] h-full flex flex-col relative shadow-[0_0_50px_rgba(0,0,0,0.1)] overflow-hidden">
         
         {/* Main Area */}
-        <div className="flex-1 overflow-y-auto pb-24 scroll-smooth">
+        <div className="flex-1 overflow-y-auto pb-20 scroll-smooth custom-scrollbar">
           {currentTab === 'home' && <HomeView 
              knownWords={knownWords} unknownWords={unknownWords} total={wordsData.length}
              resetProgress={resetProgress}
@@ -191,48 +191,47 @@ function HomeView({ knownWords, unknownWords, total, resetProgress, xp, achievem
   const userLevel = getLevelInfo(xp);
 
   return (
-    <div className="p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="p-4 sm:p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 relative h-full flex flex-col">
       
       {/* Decorative Blur Backgrounds */}
-      <div className="absolute top-[-50px] left-[-50px] w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-      <div className="absolute top-[10%] right-[-50px] w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+      <div className="absolute top-[-50px] left-[-50px] w-48 h-48 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+      <div className="absolute top-[10%] right-[-50px] w-48 h-48 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
 
-      <header className="mb-8 flex justify-between items-center mt-2 relative z-10">
+      <header className="mb-4 flex justify-between items-center mt-1 relative z-10">
         <div>
-          <h1 className="text-4xl font-black bg-clip-text text-transparent bg-linear-to-r from-indigo-600 via-purple-600 to-pink-500 tracking-tight drop-shadow-sm">Sweetly</h1>
-
+          <h1 className="text-3xl font-black bg-clip-text text-transparent bg-linear-to-r from-indigo-600 via-purple-600 to-pink-500 tracking-tight drop-shadow-sm">Sweetly</h1>
         </div>
-        <button onClick={resetProgress} className="w-10 h-10 bg-white/60 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-400 shadow-[0_2px_10px_rgba(0,0,0,0.05)] border border-white hover:text-indigo-500 hover:rotate-90 transition-all duration-300">
-          <Settings size={18} />
+        <button onClick={resetProgress} className="w-9 h-9 bg-white/60 backdrop-blur-md rounded-xl flex items-center justify-center text-slate-400 shadow-[0_2px_10px_rgba(0,0,0,0.05)] border border-white hover:text-indigo-500 hover:rotate-90 transition-all duration-300">
+          <Settings size={16} />
         </button>
       </header>
 
       {/* User Profile / Level Card */}
-      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-6 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] border border-white/80 mb-8 relative overflow-hidden group hover:shadow-[0_30px_50px_-15px_rgba(99,102,241,0.1)] transition-all duration-500">
-        <div className="absolute -top-10 -right-10 p-4 opacity-5 pointer-events-none group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
-           <Trophy size={140} className="text-indigo-900" />
+      <div className="bg-white/70 backdrop-blur-xl rounded-[1.5rem] p-4 shadow-[0_15px_30px_-15px_rgba(0,0,0,0.05)] border border-white/80 mb-4 relative overflow-hidden group transition-all duration-500">
+        <div className="absolute -top-6 -right-6 p-4 opacity-5 pointer-events-none group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
+           <Trophy size={100} className="text-indigo-900" />
         </div>
         
-        <div className="flex items-center gap-5 mb-5">
+        <div className="flex items-center gap-4 mb-4">
           <div className="relative">
-            <div className="absolute inset-0 bg-linear-to-br from-indigo-400 to-purple-500 rounded-2xl blur-md opacity-50 group-hover:opacity-100 transition-opacity"></div>
-            <div className="w-16 h-16 bg-linear-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-inner relative z-10 border border-white/20">
+            <div className="absolute inset-0 bg-linear-to-br from-indigo-400 to-purple-500 rounded-xl blur-md opacity-50 group-hover:opacity-100 transition-opacity"></div>
+            <div className="w-12 h-12 bg-linear-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-xl font-black text-white shadow-inner relative z-10 border border-white/20">
                Lv.{userLevel.levelNum}
             </div>
           </div>
           <div className="flex-1 relative z-10">
-             <h2 className="text-2xl font-black text-slate-800 tracking-tight">{userLevel.name}</h2>
-             <p className="text-indigo-500 text-xs font-bold mt-0.5">{userLevel.desc}</p>
+             <h2 className="text-xl font-black text-slate-800 tracking-tight">{userLevel.name}</h2>
+             <p className="text-indigo-500 text-[10px] font-bold mt-0.5">{userLevel.desc}</p>
           </div>
         </div>
 
         {/* XP Bar */}
-        <div className="mt-2">
-          <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wide">
+        <div className="mt-1">
+          <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
             <span className="text-indigo-600">{xp} XP</span>
             <span>{userLevel.nextGoal ? `${userLevel.nextGoal} XP` : 'MAX'}</span>
           </div>
-          <div className="w-full bg-slate-100/80 h-4 rounded-full overflow-hidden shadow-inner border border-slate-200/50 relative">
+          <div className="w-full bg-slate-100/80 h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/50 relative">
             <div 
               className="bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full transition-all duration-1000 ease-out" 
               style={{ width: `${userLevel.progress}%` }}
@@ -242,63 +241,63 @@ function HomeView({ knownWords, unknownWords, total, resetProgress, xp, achievem
           </div>
         </div>
 
-        <div className="flex justify-between mt-6 pt-5 border-t border-slate-100/50 relative z-10">
+        <div className="flex justify-between mt-4 pt-4 border-t border-slate-100/50 relative z-10">
            <div className="text-center flex-1 border-r border-slate-100/50">
-             <div className="text-xl font-black text-orange-500 flex items-center justify-center gap-1.5 drop-shadow-sm">
-               <Flame size={18} className="animate-pulse" /> {streakCount}
+             <div className="text-lg font-black text-orange-500 flex items-center justify-center gap-1.5 drop-shadow-sm">
+               <Flame size={16} className="animate-pulse" /> {streakCount}
              </div>
-             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Day Streak</div>
+             <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Day Streak</div>
            </div>
            <div className="text-center flex-1">
-             <div className="text-xl font-black text-purple-600 flex items-center justify-center gap-1.5 drop-shadow-sm">
-               <Award size={18} /> {achievements.size}
+             <div className="text-lg font-black text-purple-600 flex items-center justify-center gap-1.5 drop-shadow-sm">
+               <Award size={16} /> {achievements.size}
              </div>
-             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Badges</div>
+             <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Badges</div>
            </div>
         </div>
       </div>
 
       {/* Main Stats Card */}
-      <h3 className="font-bold text-slate-800 mb-4 ml-1 flex items-center gap-2 text-lg">
-         <Layers size={18} className="text-purple-500" /> Vocabulary Stats
+      <h3 className="font-bold text-slate-800 mb-3 ml-1 flex items-center gap-2 text-base">
+         <Layers size={16} className="text-purple-500" /> Stats
       </h3>
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <StatCard 
           icon="✅" label="Mastered" value={knownWords.size} 
-          color="bg-white/60 text-emerald-600 border border-emerald-100 shadow-[0_8px_20px_-10px_rgba(16,185,129,0.15)] backdrop-blur-sm" 
+          color="bg-white/60 text-emerald-600 border border-emerald-50 shadow-sm backdrop-blur-sm" 
           onClick={() => setShowList('mastered')}
         />
         <StatCard 
-          icon="❌" label="Needs Review" value={unknownWords.size} 
-          color="bg-white/60 text-rose-600 border border-rose-100 shadow-[0_8px_20px_-10px_rgba(244,63,94,0.15)] backdrop-blur-sm" 
+          icon="❌" label="Review" value={unknownWords.size} 
+          color="bg-white/60 text-rose-600 border border-rose-50 shadow-sm backdrop-blur-sm" 
           onClick={() => setShowList('review')}
         />
         <div className="col-span-2">
-           <div className="bg-white/70 backdrop-blur-md p-5 rounded-[1.5rem] border border-white flex items-center justify-between shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_15px_35px_-15px_rgba(0,0,0,0.1)] transition-all">
+           <div className="bg-white/70 backdrop-blur-md p-4 rounded-[1.25rem] border border-white flex items-center justify-between shadow-sm">
              <div>
-               <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-widest">Overall Progress</div>
-               <div className="text-3xl font-black bg-clip-text text-transparent bg-linear-to-br from-slate-700 to-slate-900">{progressPercent}%</div>
+               <div className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 tracking-widest">Progress</div>
+               <div className="text-2xl font-black bg-clip-text text-transparent bg-linear-to-br from-slate-700 to-slate-900">{progressPercent}%</div>
              </div>
              <div className="text-right">
-               <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-widest">Unseen</div>
-               <div className="text-2xl font-black text-slate-500 opacity-80">{remaining}</div>
+               <div className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 tracking-widest">Unseen</div>
+               <div className="text-xl font-black text-slate-400">{remaining}</div>
              </div>
            </div>
         </div>
       </div>
 
       {/* Achievements Locker */}
-      <h3 className="font-bold text-slate-800 mb-4 ml-1 flex items-center gap-2 text-lg">
-        <Trophy size={18} className="text-yellow-500" /> Locker
+      <h3 className="font-bold text-slate-800 mb-3 ml-1 flex items-center gap-2 text-base">
+        <Trophy size={16} className="text-yellow-500" /> Locker
       </h3>
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-3 mb-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
         {Object.values(ACHIEVEMENTS_DATA).map(badge => {
           const unlocked = achievements.has(badge.id);
           return (
-            <div key={badge.id} className={`p-4 rounded-[1.5rem] flex flex-col items-center text-center transition-all duration-300 ${unlocked ? 'bg-white/80 backdrop-blur-md border border-white shadow-[0_15px_30px_-15px_rgba(234,179,8,0.2)] hover:-translate-y-1' : 'bg-slate-100/50 border border-slate-200/50 opacity-50 grayscale'}`}>
-              <span className="text-4xl mb-3 filter drop-shadow-md">{badge.icon}</span>
-              <span className={`text-sm font-black tracking-tight ${unlocked ? 'bg-clip-text text-transparent bg-linear-to-br from-orange-500 to-yellow-600' : 'text-slate-400'}`}>{badge.name}</span>
-              <span className={`text-[10px] font-bold leading-tight mt-1 ${unlocked ? 'text-orange-900/60' : 'text-slate-400'}`}>{badge.desc}</span>
+            <div key={badge.id} className={`p-3 rounded-[1.25rem] flex flex-col items-center text-center transition-all duration-300 ${unlocked ? 'bg-white/80 backdrop-blur-md border border-white shadow-sm' : 'bg-slate-100/50 border border-slate-200/50 opacity-40 grayscale'}`}>
+              <span className="text-3xl mb-2 filter drop-shadow-sm">{badge.icon}</span>
+              <span className={`text-[11px] font-black tracking-tight leading-tight ${unlocked ? 'text-indigo-600' : 'text-slate-400'}`}>{badge.name}</span>
+              {unlocked && <span className="text-[8px] font-bold leading-tight mt-0.5 text-slate-400">{badge.desc}</span>}
             </div>
           )
         })}
@@ -368,13 +367,13 @@ function StatCard({ icon, label, value, color, onClick }) {
   return (
     <button 
       onClick={onClick}
-      className={`p-5 rounded-3xl flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-95 group relative overflow-hidden ${color}`}
+      className={`p-3 sm:p-5 rounded-3xl flex flex-col items-center justify-center transition-all duration-300 hover:shadow-lg active:scale-95 group relative overflow-hidden ${color}`}
     >
       <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      <span className="text-3xl mb-2 filter drop-shadow-md group-hover:scale-110 transition-transform">{icon}</span>
-      <span className="font-black text-3xl tracking-tight leading-none">{value}</span>
-      <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 mt-2">{label}</span>
-      <div className="absolute bottom-1 right-2 text-[8px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-30 transition-opacity">View List →</div>
+      <span className="text-2xl sm:text-3xl mb-1 sm:mb-2 filter drop-shadow-md group-hover:scale-110 transition-transform">{icon}</span>
+      <span className="font-black text-xl sm:text-3xl tracking-tight leading-none">{value}</span>
+      <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest opacity-60 mt-1 sm:mt-2">{label}</span>
+      <div className="absolute bottom-1 right-2 text-[8px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-30 transition-opacity">List →</div>
     </button>
   );
 }
