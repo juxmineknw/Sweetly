@@ -1,5 +1,20 @@
-import React, { useState, useEffect } from 'react'
-import { Home, Layers, Gamepad2, Settings, ArrowRight, Award, Flame, Zap, Moon, Calendar, Trophy } from 'lucide-react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { 
+  Plus, Search, Settings, Home, Layers, Gamepad2, 
+  Trash2, X, ChevronRight, CheckCircle2, AlertCircle, 
+  Trophy, Flame, Award, Zap, Star, Layout, 
+  ArrowRight, RefreshCw, BookOpen, Clock, Heart,
+  Volume2
+} from 'lucide-react';
+
+const speakText = (text, lang = 'en-US') => {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 0.9;
+  window.speechSynthesis.speak(utterance);
+};
 import './App.css'
 import wordsData from './data/oxford_3000_full.json';
 
@@ -63,16 +78,26 @@ function App() {
     if (saved) return JSON.parse(saved);
     return { lastLoginDate: new Date().toDateString(), streakCount: 1 };
   });
+  const [dailyXp, setDailyXp] = useState(() => {
+    const saved = localStorage.getItem('sweetly_daily_xp');
+    const lastDate = localStorage.getItem('sweetly_last_xp_date');
+    if (lastDate === new Date().toDateString()) return parseInt(saved || '0', 10);
+    return 0;
+  });
+  const [dailyGoal, setDailyGoal] = useState(() => {
+    return parseInt(localStorage.getItem('sweetly_daily_goal') || '50', 10);
+  });
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   // Feedback Overlay State
   const [feedback, setFeedback] = useState(null); // { type: 'success'|'error'|'achievement', title: string, subtitle?: string, icon?: string }
   
-  const triggerFeedback = (data, duration = 1800) => {
+  const triggerFeedback = useCallback((data, duration = 1800) => {
     setFeedback(data);
     setTimeout(() => setFeedback(null), duration);
-  };
+  }, []);
 
-  const unlockAchievement = (id) => {
+  const unlockAchievement = useCallback((id) => {
     setAchievements(prev => {
       const next = new Set(prev);
       if (!next.has(id)) {
@@ -89,7 +114,7 @@ function App() {
       }
       return next;
     });
-  };
+  }, [triggerFeedback]);
 
   // Setup / Check Daily Streaks
   useEffect(() => {
@@ -118,7 +143,7 @@ function App() {
 
       return { lastLoginDate: today, streakCount: newStreak };
     });
-  }, []); // Run once on mount
+  }, [unlockAchievement]); // Run once on mount (or if unlockAchievement somehow changes)
 
   // Sync to local storage
   useEffect(() => localStorage.setItem('sweetly_known', JSON.stringify(Array.from(knownWords))), [knownWords]);
@@ -127,9 +152,15 @@ function App() {
   useEffect(() => localStorage.setItem('sweetly_xp', xp.toString()), [xp]);
   useEffect(() => localStorage.setItem('sweetly_achievements', JSON.stringify(Array.from(achievements))), [achievements]);
   useEffect(() => localStorage.setItem('sweetly_streak', JSON.stringify(streakData)), [streakData]);
+  useEffect(() => {
+    localStorage.setItem('sweetly_daily_xp', dailyXp.toString());
+    localStorage.setItem('sweetly_last_xp_date', new Date().toDateString());
+  }, [dailyXp]);
+  useEffect(() => localStorage.setItem('sweetly_daily_goal', dailyGoal.toString()), [dailyGoal]);
 
   const addXp = (amount) => {
     setXp(prev => prev + amount);
+    setDailyXp(prev => prev + amount);
   };
 
   const resetProgress = () => {
@@ -149,15 +180,19 @@ function App() {
         
         {/* Main Area */}
         <div className="flex-1 overflow-y-auto pb-20 scroll-smooth custom-scrollbar">
-          {currentTab === 'home' && <HomeView 
-             knownWords={knownWords} unknownWords={unknownWords} total={wordsData.length}
-             resetProgress={resetProgress}
-             xp={xp} achievements={achievements} streakCount={streakData.streakCount}
-          />}
+          {currentTab === 'home' && (
+            <HomeView 
+              knownWords={knownWords} unknownWords={unknownWords} total={wordsData.length} 
+              resetProgress={resetProgress} xp={xp} achievements={achievements} streakCount={streakData.streakCount}
+              dailyXp={dailyXp} dailyGoal={dailyGoal} setDailyGoal={setDailyGoal}
+              selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
+            />
+          )}
           {currentTab === 'flashcards' && <FlashcardsView 
              knownWords={knownWords} setKnownWords={setKnownWords}
              unknownWords={unknownWords} setUnknownWords={setUnknownWords}
-             addXp={addXp}
+             addXp={addXp} wrongCounts={wrongCounts}
+             selectedCategory={selectedCategory}
           />}
           {currentTab === 'test' && <TestView 
              setKnownWords={setKnownWords}
@@ -165,6 +200,7 @@ function App() {
              addXp={addXp} unlockAchievement={unlockAchievement}
              wrongCounts={wrongCounts} setWrongCounts={setWrongCounts}
              triggerFeedback={triggerFeedback}
+             selectedCategory={selectedCategory}
           />}
         </div>
 
@@ -187,7 +223,7 @@ function FeedbackOverlay({ type, title, subtitle, icon }) {
   const isSuccess = type === 'success';
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 pointer-events-none">
+    <div className="fixed inset-0 z-1000 flex items-center justify-center p-6 pointer-events-none">
        <div className={`
          w-full max-w-[280px] rounded-[2.5rem] p-8 flex flex-col items-center text-center shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)] border-2 border-white/50 backdrop-blur-2xl
          animate-in fade-in zoom-in slide-in-from-bottom-12 duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)
@@ -234,11 +270,39 @@ function NavButton({ icon, label, isActive, onClick }) {
 // ==========================================
 // HOME VIEW
 // ==========================================
-function HomeView({ knownWords, unknownWords, total, resetProgress, xp, achievements, streakCount }) {
+function HomeView({ knownWords, unknownWords, resetProgress, xp, achievements, streakCount, dailyXp, dailyGoal, setDailyGoal, selectedCategory, setSelectedCategory }) {
   const [showList, setShowList] = useState(null); // 'mastered' | 'review' | null
-  const remaining = total - knownWords.size - unknownWords.size;
-  const progressPercent = Math.round((knownWords.size / total) * 100);
+  
+  // Filter words by category if not 'All'
+  const filteredIndices = useMemo(() => wordsData.reduce((acc, word, idx) => {
+    if (selectedCategory === 'All') {
+      acc.push(idx);
+    } else {
+      const levelMatch = word.level === selectedCategory;
+      const posMatch = word.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''));
+      if (levelMatch || posMatch) acc.push(idx);
+    }
+    return acc;
+  }, []), [selectedCategory]);
+
+  const catKnown = useMemo(() => filteredIndices.filter(idx => knownWords.has(idx)).length, [filteredIndices, knownWords]);
+  const catUnknown = useMemo(() => filteredIndices.filter(idx => unknownWords.has(idx)).length, [filteredIndices, unknownWords]);
+  const catTotal = filteredIndices.length;
+  const catRemaining = catTotal - catKnown - catUnknown;
+
+  const progressPercent = catTotal > 0 ? Math.round((catKnown / catTotal) * 100) : 0;
   const userLevel = getLevelInfo(xp);
+
+  const goalPercent = Math.min(100, Math.round((dailyXp / dailyGoal) * 100));
+  
+  const handleEditGoal = () => {
+    const newGoal = prompt('Enter your daily XP goal:', dailyGoal);
+    if (newGoal && !isNaN(newGoal)) {
+      setDailyGoal(parseInt(newGoal, 10));
+    }
+  };
+  
+  const CATEGORIES = ['All', 'A1', 'A2', 'B1', 'B2', 'N.', 'V.', 'Adj.', 'Adv.'];
 
   return (
     <div className="p-4 sm:p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 relative h-full flex flex-col">
@@ -302,8 +366,60 @@ function HomeView({ knownWords, unknownWords, total, resetProgress, xp, achievem
              <div className="text-lg font-black text-purple-600 flex items-center justify-center gap-1.5 drop-shadow-sm">
                <Award size={16} /> {achievements.size}
              </div>
-             <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Badges</div>
+              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Badges</div>
            </div>
+        </div>
+      </div>
+
+      <div className="bg-linear-to-br from-indigo-500/10 to-purple-500/5 rounded-3xl p-4 mb-6 border border-indigo-100 flex items-center justify-between relative overflow-hidden group">
+        <div className="relative z-10">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-black text-indigo-700 tracking-tight">🎯 Daily Goal</h4>
+            <button onClick={handleEditGoal} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-indigo-400 hover:text-indigo-600">
+              <Settings size={12} />
+            </button>
+          </div>
+          <p className="text-[10px] font-bold text-indigo-500 mt-0.5 uppercase tracking-widest">
+            {dailyXp} / {dailyGoal} XP Earned
+          </p>
+        </div>
+        <div className="relative w-14 h-14 flex items-center justify-center z-10">
+          <svg className="w-full h-full transform -rotate-90">
+            <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-indigo-100" />
+            <circle 
+              cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" 
+              className="text-indigo-500 transition-all duration-1000 ease-out"
+              strokeDasharray={2 * Math.PI * 24}
+              strokeDashoffset={2 * Math.PI * 24 * (1 - goalPercent / 100)}
+              strokeLinecap="round"
+            />
+          </svg>
+          <span className="absolute text-[10px] font-black text-indigo-600">{goalPercent}%</span>
+        </div>
+        <div className="absolute top-0 right-[-20%] w-40 h-40 bg-indigo-200/20 rounded-full blur-2xl"></div>
+      </div>
+
+      {/* Categories Filter */}
+      <div className="mb-6 relative z-10">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2 text-base">
+            <Layout size={16} className="text-indigo-500" /> Categories
+          </h3>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedCategory} Selected</span>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar no-scrollbar">
+          {CATEGORIES.map(cat => (
+            <button 
+              key={cat} onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all duration-300 border
+                ${selectedCategory === cat 
+                  ? 'bg-linear-to-r from-indigo-500 to-purple-500 text-white border-transparent shadow-[0_5px_15px_-5px_rgba(99,102,241,0.4)] scale-105' 
+                  : 'bg-white/80 backdrop-blur-md text-slate-400 border-slate-100 hover:border-indigo-200 hover:text-indigo-500'
+                }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -313,24 +429,24 @@ function HomeView({ knownWords, unknownWords, total, resetProgress, xp, achievem
       </h3>
       <div className="grid grid-cols-2 gap-3 mb-4">
         <StatCard 
-          icon="✅" label="Mastered" value={knownWords.size} 
+          icon="✅" label="Mastered" value={catKnown} 
           color="bg-white/60 text-emerald-600 border border-emerald-50 shadow-sm backdrop-blur-sm" 
           onClick={() => setShowList('mastered')}
         />
         <StatCard 
-          icon="❌" label="Review" value={unknownWords.size} 
+          icon="❌" label="Review" value={catUnknown} 
           color="bg-white/60 text-rose-600 border border-rose-50 shadow-sm backdrop-blur-sm" 
           onClick={() => setShowList('review')}
         />
         <div className="col-span-2">
            <div className="bg-white/70 backdrop-blur-md p-4 rounded-[1.25rem] border border-white flex items-center justify-between shadow-sm">
              <div>
-               <div className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 tracking-widest">Progress</div>
+               <div className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 tracking-widest">Category Progress</div>
                <div className="text-2xl font-black bg-clip-text text-transparent bg-linear-to-br from-slate-700 to-slate-900">{progressPercent}%</div>
              </div>
              <div className="text-right">
                <div className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 tracking-widest">Unseen</div>
-               <div className="text-xl font-black text-slate-400">{remaining}</div>
+               <div className="text-xl font-black text-slate-400">{catRemaining}</div>
              </div>
            </div>
         </div>
@@ -360,19 +476,28 @@ function HomeView({ knownWords, unknownWords, total, resetProgress, xp, achievem
           onClose={() => setShowList(null)} 
           knownWords={knownWords} 
           unknownWords={unknownWords} 
+          selectedCategory={selectedCategory}
         />
       )}
     </div>
   );
 }
 
-function WordListModal({ type, onClose, knownWords, unknownWords }) {
+function WordListModal({ type, onClose, knownWords, unknownWords, selectedCategory }) {
   const isMastered = type === 'mastered';
   const title = isMastered ? 'Mastered Words' : 'Needs Review';
   const titleColor = isMastered ? 'text-emerald-500' : 'text-rose-500';
   const targetSet = isMastered ? knownWords : unknownWords;
 
-  const words = Array.from(targetSet).map(idx => wordsData[idx]);
+  let words = Array.from(targetSet).map(idx => ({ ...wordsData[idx], index: idx }));
+
+  if (selectedCategory !== 'All') {
+    words = words.filter(word => {
+      const levelMatch = word.level === selectedCategory;
+      const posMatch = word.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''));
+      return levelMatch || posMatch;
+    });
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -423,7 +548,6 @@ function StatCard({ icon, label, value, color, onClick }) {
       <span className="text-2xl sm:text-3xl mb-1 sm:mb-2 filter drop-shadow-md group-hover:scale-110 transition-transform">{icon}</span>
       <span className="font-black text-xl sm:text-3xl tracking-tight leading-none">{value}</span>
       <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest opacity-60 mt-1 sm:mt-2">{label}</span>
-      <div className="absolute bottom-1 right-2 text-[8px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-30 transition-opacity">List →</div>
     </button>
   );
 }
@@ -431,33 +555,30 @@ function StatCard({ icon, label, value, color, onClick }) {
 // ==========================================
 // FLASHCARDS VIEW
 // ==========================================
-function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWords, addXp }) {
+function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWords, addXp, wrongCounts, selectedCategory }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [studyMode, setStudyMode] = useState('all'); 
-  const [shuffleSeed, setShuffleSeed] = useState(Math.random());
+  const [shuffleSeed, setShuffleSeed] = useState(() => Math.random());
 
-  // Derive the pool deterministically based on the seed
-  const activeSet = React.useMemo(() => {
+  const activeSet = (() => {
     let pool = studyMode === 'review' 
       ? Array.from(unknownWords).map(i => ({ index: i, ...wordsData[i] }))
       : wordsData.map((word, i) => ({ index: i, ...word }));
-    
-    // Use the seed to predictably shuffle during render (no side effects)
-    // We recreate the array and sort it based on a pseudo-random value that only changes when requested
-    // Here we use a standard Math.random sort, but since the seed only changes on explicit actions,
-    // this array remains stable between normal renders where the seed and dependencies haven't changed.
-    // However, to satisfy React's strict purity, instead of Math.random() in the sort, 
-    // we should create a stable shuffle function tied to the seed. 
-    // But honestly, the easiest way to avoid the purity error is just storing the shuffled array in state 
-    // and updating it via event handlers instead of useEffect.
 
-    return pool.map(item => ({ item, sort: Math.random() }))
-               .sort((a, b) => a.sort - b.sort)
-               .map(({ item }) => item);
-               
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studyMode, shuffleSeed, unknownWords.size]); // We purposefully omit knownWords to avoid reshuffling when marking known
+    if (selectedCategory !== 'All') {
+      pool = pool.filter(word => {
+        const levelMatch = word.level === selectedCategory;
+        const posMatch = word.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''));
+        return levelMatch || posMatch;
+      });
+    }
+
+    if (studyMode === 'review') {
+      return pool.sort((a, b) => (wrongCounts[b.index] || 0) - (wrongCounts[a.index] || 0));
+    }
+    return pool.sort(() => shuffleSeed - 0.5);
+  })();
 
   const currentCard = activeSet.length > 0 ? activeSet[currentIndex] : null;
 
@@ -559,20 +680,28 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
           <div className={`relative w-full h-full transition-all duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
             
             {/* Front Side: English Word */}
-            <div className={`absolute inset-0 w-full h-full bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center border border-white [backface-visibility:hidden] relative overflow-hidden transition-colors duration-500
+            <div className={`absolute inset-0 w-full h-full bg-white rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center border border-white backface-hidden relative overflow-hidden transition-colors duration-500
               ${knownWords.has(currentCard.index) ? 'border-emerald-200/50 bg-emerald-50/10' : ''}
               ${unknownWords.has(currentCard.index) ? 'border-rose-200/50 bg-rose-50/20' : ''}
             `}>
               {(knownWords.has(currentCard.index) || unknownWords.has(currentCard.index)) && (
-                <div className={`absolute top-0 right-0 px-5 py-2.5 rounded-bl-[1.5rem] text-[10px] font-black uppercase tracking-wider text-white shadow-sm
+                <div className={`absolute top-0 right-0 px-5 py-2.5 rounded-bl-3xl text-[10px] font-black uppercase tracking-wider text-white shadow-sm
                     ${knownWords.has(currentCard.index) ? 'bg-linear-to-br from-emerald-400 to-green-500' : 'bg-linear-to-br from-rose-400 to-pink-500'}
                 `}>
                   {knownWords.has(currentCard.index) ? '✅ Mastered' : '❌ Needs Review'}
                 </div>
               )}
 
-              <div className="absolute top-8 left-8 px-4 py-1.5 bg-linear-to-br from-slate-50 to-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200/60 shadow-sm">
-                {currentCard.level} <span className="text-slate-300 mx-1">•</span> {currentCard.pos}
+              <div className="absolute top-6 left-6 flex items-center gap-2">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); speakText(currentCard.word); }}
+                  className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center hover:bg-indigo-100 transition-colors shadow-sm"
+                >
+                  <Volume2 size={20} />
+                </button>
+                <div className="px-3 py-1.5 bg-linear-to-br from-slate-50 to-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200/60 shadow-sm">
+                  {currentCard.level} <span className="text-slate-300 mx-1">•</span> {currentCard.pos}
+                </div>
               </div>
               
               <h2 className="text-5xl sm:text-6xl font-black text-slate-800 tracking-tight px-6 text-center bg-clip-text text-transparent bg-linear-to-br from-slate-700 to-slate-900 drop-shadow-sm">
@@ -588,18 +717,27 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
             </div>
 
             {/* Back Side: Thai Meaning & Sentences */}
-            <div className="absolute inset-0 w-full h-full bg-linear-to-br from-pink-50 via-purple-50 to-indigo-100 text-slate-800 rounded-4xl shadow-[0_25px_50px_-12px_rgba(99,102,241,0.25)] flex flex-col items-center justify-center p-8 backface-hidden transform-[rotateY(180deg)] border-2 border-white">
+            <div className="absolute inset-0 w-full h-full bg-linear-to-br from-pink-50 via-purple-50 to-indigo-100 text-slate-800 rounded-4xl shadow-[0_25px_50px_-12px_rgba(99,102,241,0.25)] flex flex-col items-center justify-center p-8 backface-hidden transform-[rotateY(180deg)] border-2 border-white relative">
               {/* Soft glow effects inside the pastel card for a dreamy feel */}
               <div className="absolute top-0 right-0 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 pointer-events-none"></div>
               <div className="absolute bottom-0 left-0 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 pointer-events-none"></div>
               
+              <div className="absolute top-6 right-6">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); speakText(currentCard.sentence_en); }}
+                  className="w-10 h-10 bg-white/60 text-purple-600 rounded-xl flex items-center justify-center hover:bg-white transition-colors shadow-sm"
+                >
+                  <Volume2 size={20} />
+                </button>
+              </div>
+
               <h3 className="text-4xl sm:text-5xl font-black mb-10 text-center leading-tight bg-clip-text text-transparent bg-linear-to-br from-indigo-600 to-purple-600 drop-shadow-sm z-10">
                 {currentCard.meaning_th}
               </h3>
               
               <div className="w-full text-center overflow-y-auto max-h-[220px] scrollbar-hide z-10 relative">
-                <div className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-white shadow-[0_10px_30px_rgb(99,102,241,0.1)]">
-                  <p className="text-xl font-medium leading-relaxed text-slate-700 italic">
+                <div className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-white shadow-[0_10px_30px_rgb(99,102,241,0.1)] group">
+                  <p className="text-xl font-medium leading-relaxed text-slate-700 italic cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => speakText(currentCard.sentence_en)}>
                     "{currentCard.sentence_en}"
                   </p>
                   <div className="h-px bg-linear-to-r from-transparent via-indigo-200 to-transparent my-5 w-3/4 mx-auto"></div>
@@ -644,6 +782,7 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
 // ==========================================
 // TEST VIEW
 // ==========================================
+function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockAchievement, wrongCounts, setWrongCounts, triggerFeedback, selectedCategory }) {
   const [question, setQuestion] = useState(null);
   const [options, setOptions] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -651,16 +790,31 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [combo, setCombo] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState(0);
-  const [feedbackMsg, setFeedbackMsg] = useState('');
+  const [testMode, setTestMode] = useState('multiple'); // 'multiple' | 'fill'
+  const [userInput, setUserInput] = useState('');
 
   const generateQuestion = () => {
-    let pool = unknownWords.size > 0 && Math.random() > 0.3 
-      ? Array.from(unknownWords).map(i => ({ index: i, ...wordsData[i] }))
-      : wordsData.map((word, i) => ({ index: i, ...word }));
+    let pool = wordsData.map((w, i) => ({ ...w, index: i }));
+
+    if (selectedCategory !== 'All') {
+      pool = pool.filter(word => {
+        const levelMatch = word.level === selectedCategory;
+        const posMatch = word.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''));
+        return levelMatch || posMatch;
+      });
+    }
 
     if (pool.length === 0) return;
 
-    const targetWord = pool[Math.floor(Math.random() * pool.length)];
+    // Prioritize unknown words in the filtered pool
+    const filteredUnknowns = pool.filter(w => unknownWords.has(w.index));
+    
+    let targetWord;
+    if (filteredUnknowns.length > 0 && Math.random() > 0.3) {
+      targetWord = filteredUnknowns[Math.floor(Math.random() * filteredUnknowns.length)];
+    } else {
+      targetWord = pool[Math.floor(Math.random() * pool.length)];
+    }
 
     const wrongOptions = [];
     while (wrongOptions.length < 3) {
@@ -674,7 +828,7 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
     setOptions([targetWord, ...wrongOptions].sort(() => Math.random() - 0.5));
     setSelectedAnswer(null);
     setIsCorrect(null);
-    setFeedbackMsg('');
+    setUserInput('');
     setQuestionStartTime(Date.now());
   };
 
@@ -706,7 +860,13 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
       if (newCombo > 2) xpEarned += 5; // combo bonus
       
       addXp(xpEarned);
-      setFeedbackMsg(`Sweetly answered! You earned ${xpEarned} XP 💕`);
+      
+      triggerFeedback({
+        type: 'success',
+        title: 'Correct!',
+        subtitle: `Awesome! +${xpEarned} XP`,
+        icon: '🍭'
+      }, 1000);
 
       // Achievement Checks
       if (newCombo >= 20) unlockAchievement('sugar_high');
@@ -721,7 +881,14 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
     } else {
       setCombo(0);
       setWrongCounts(prev => ({ ...prev, [question.index]: (prev[question.index] || 0) + 1 }));
-      setFeedbackMsg(`Oops! A bit bitter. Time to add some sugar! 🥺`);
+      
+      triggerFeedback({
+        type: 'error',
+        title: 'Oops!',
+        subtitle: 'Bittersweet. Keep trying!',
+        icon: '🥺'
+      }, 1000);
+
       setUnknownWords(prev => new Set(prev).add(question.index));
       setKnownWords(prev => {
         const next = new Set(prev);
@@ -746,14 +913,25 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
           <p className="text-slate-400 text-[11px] font-bold mt-1 uppercase tracking-[0.2em]">Memory Test</p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          {combo > 1 && (
-            <div className="bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 flex items-center gap-1 animate-in slide-in-from-right zoom-in">
-              <Flame size={12} className="text-orange-500" />
-              <span className="text-orange-600 font-black text-xs">x{combo} Combo</span>
+          <button 
+            onClick={() => {
+              setTestMode(prev => prev === 'multiple' ? 'fill' : 'multiple');
+              generateQuestion();
+            }}
+            className="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-black uppercase tracking-wider text-indigo-500 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-50 transition-all"
+          >
+            {testMode === 'multiple' ? '⌨️ Switch to Fill' : '🔘 Switch to MCQ'}
+          </button>
+          <div className="flex gap-2">
+            {combo > 1 && (
+              <div className="bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 flex items-center gap-1 animate-in slide-in-from-right zoom-in">
+                <Flame size={12} className="text-orange-500" />
+                <span className="text-orange-600 font-black text-xs">x{combo} Combo</span>
+              </div>
+            )}
+            <div className="bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 flex items-center gap-2">
+              <span className="text-indigo-600 font-black">{score.correct} / {score.total}</span>
             </div>
-          )}
-          <div className="bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 flex items-center gap-2">
-            <span className="text-indigo-600 font-black">{score.correct} / {score.total}</span>
           </div>
         </div>
       </header>
@@ -767,42 +945,81 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
            </div>
          )}
          <h3 className="text-5xl text-center font-black bg-clip-text text-transparent bg-linear-to-br from-slate-700 to-slate-900 drop-shadow-sm tracking-tight mt-6">
-           {question.word}
+           {testMode === 'multiple' ? question.word : question.meaning_th}
          </h3>
          <div className="mt-6 px-4 py-1.5 bg-linear-to-br from-indigo-50 to-purple-50 text-indigo-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100/50 shadow-sm flex items-center gap-2">
             <span>{question.level}</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-200"></span>
-            <span>{question.pos}</span>
+            {testMode === 'multiple' && (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-200"></span>
+                <span>{question.pos}</span>
+              </>
+            )}
          </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 mb-6 relative z-10">
-        {options.map((option, idx) => {
-          let btnStyle = "bg-white/90 backdrop-blur-sm border border-slate-100 text-slate-600 shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_20px_-5px_rgba(99,102,241,0.15)] hover:border-indigo-200 hover:-translate-y-1 hover:bg-linear-to-r hover:from-white hover:to-indigo-50";
-          let icon = null;
+      <div className="space-y-4 mb-6 relative z-10">
+        {testMode === 'multiple' ? (
+          <div className="grid grid-cols-1 gap-4">
+            {options.map((option, idx) => {
+              let btnStyle = "bg-white/90 backdrop-blur-sm border border-slate-100 text-slate-600 shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_20px_-5px_rgba(99,102,241,0.15)] hover:border-indigo-200 hover:-translate-y-1 hover:bg-linear-to-r hover:from-white hover:to-indigo-50";
+              let icon = null;
 
-          if (selectedAnswer !== null) {
-            if (option.word === question.word) {
-              btnStyle = "bg-linear-to-r from-emerald-50 to-green-50 z-10 border border-emerald-200 text-green-700 shadow-[0_10px_25px_-5px_rgba(16,185,129,0.3)] scale-[1.03] transition-all";
-              icon = "✅";
-            } else if (selectedAnswer.word === option.word && !isCorrect) {
-              btnStyle = "bg-linear-to-r from-rose-50 to-pink-50 border border-rose-200 text-rose-700 shadow-[0_10px_25px_-5px_rgba(244,63,94,0.3)]";
-              icon = "❌";
-            } else {
-              btnStyle = "bg-slate-50/50 border border-slate-100 text-slate-400 opacity-40 grayscale";
-            }
-          }
+              if (selectedAnswer !== null) {
+                if (option.word === question.word) {
+                  btnStyle = "bg-linear-to-r from-emerald-50 to-green-50 z-10 border border-emerald-200 text-green-700 shadow-[0_10px_25px_-5px_rgba(16,185,129,0.3)] scale-[1.03] transition-all";
+                  icon = "✅";
+                } else if (selectedAnswer.word === option.word && !isCorrect) {
+                  btnStyle = "bg-linear-to-r from-rose-50 to-pink-50 border border-rose-200 text-rose-700 shadow-[0_10px_25px_-5px_rgba(244,63,94,0.3)]";
+                  icon = "❌";
+                } else {
+                  btnStyle = "bg-slate-50/50 border border-slate-100 text-slate-400 opacity-40 grayscale";
+                }
+              }
 
-          return (
+              return (
+                <button 
+                  key={idx} onClick={() => handleAnswer(option)} disabled={selectedAnswer !== null}
+                  className={`p-5 rounded-3xl w-full text-left font-bold transition-all duration-300 relative flex items-center justify-between ${btnStyle} active:scale-95`}
+                >
+                  <span className="text-lg tracking-wide">{option.meaning_th}</span>
+                  {icon && <span className="text-2xl animate-in zoom-in spin-in-12">{icon}</span>}
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <div className="relative">
+              <input 
+                type="text"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAnswer({ word: userInput.trim(), meaning_th: '' })}
+                placeholder="Type the English word..."
+                className={`w-full p-6 bg-white/80 backdrop-blur-md rounded-3xl border-2 transition-all outline-hidden font-bold text-center text-xl shadow-lg
+                  ${selectedAnswer === null ? 'border-slate-100 focus:border-indigo-400' : isCorrect ? 'border-emerald-400 bg-emerald-50/50' : 'border-rose-400 bg-rose-50/50'}
+                `}
+                disabled={selectedAnswer !== null}
+                autoFocus
+              />
+              {selectedAnswer !== null && (
+                <div className="absolute -bottom-10 left-0 w-full text-center">
+                  {!isCorrect && (
+                   <span className="text-rose-500 font-bold animate-in slide-in-from-top-2">Correct: <span className="underline">{question.word}</span></span>
+                  )}
+                </div>
+              )}
+            </div>
             <button 
-              key={idx} onClick={() => handleAnswer(option)} disabled={selectedAnswer !== null}
-              className={`p-5 rounded-3xl w-full text-left font-bold transition-all duration-300 relative flex items-center justify-between ${btnStyle} active:scale-95`}
+              onClick={() => handleAnswer({ word: userInput.trim(), meaning_th: '' })}
+              disabled={selectedAnswer !== null || !userInput}
+              className="w-full py-5 bg-linear-to-r from-indigo-500 to-purple-500 text-white font-black uppercase tracking-widest rounded-3xl shadow-[0_10px_20px_-10px_rgba(99,102,241,0.5)] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
             >
-              <span className="text-lg tracking-wide">{option.meaning_th}</span>
-              {icon && <span className="text-2xl animate-in zoom-in spin-in-12">{icon}</span>}
+              Check Answer
             </button>
-          )
-        })}
+          </div>
+        )}
       </div>
     </div>
   )
