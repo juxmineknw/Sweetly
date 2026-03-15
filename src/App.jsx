@@ -64,6 +64,14 @@ function App() {
     return { lastLoginDate: new Date().toDateString(), streakCount: 1 };
   });
 
+  // Feedback Overlay State
+  const [feedback, setFeedback] = useState(null); // { type: 'success'|'error'|'achievement', title: string, subtitle?: string, icon?: string }
+  
+  const triggerFeedback = (data, duration = 1800) => {
+    setFeedback(data);
+    setTimeout(() => setFeedback(null), duration);
+  };
+
   const unlockAchievement = (id) => {
     setAchievements(prev => {
       const next = new Set(prev);
@@ -71,8 +79,13 @@ function App() {
         next.add(id);
         // Bonus XP for achievement
         setXp(x => x + 100);
-        // Could trigger an alert/toast here
-        alert(`🏆 Achievement Unlocked: ${ACHIEVEMENTS_DATA[id].name}!\nBonus 100 XP`);
+        
+        triggerFeedback({
+          type: 'achievement',
+          title: 'Unlocked!',
+          subtitle: ACHIEVEMENTS_DATA[id].name,
+          icon: ACHIEVEMENTS_DATA[id].icon
+        }, 2500);
       }
       return next;
     });
@@ -151,6 +164,7 @@ function App() {
              unknownWords={unknownWords} setUnknownWords={setUnknownWords}
              addXp={addXp} unlockAchievement={unlockAchievement}
              wrongCounts={wrongCounts} setWrongCounts={setWrongCounts}
+             triggerFeedback={triggerFeedback}
           />}
         </div>
 
@@ -160,9 +174,45 @@ function App() {
           <NavButton icon={<Layers size={24} />} label="Flashcards" isActive={currentTab === 'flashcards'} onClick={() => setCurrentTab('flashcards')} />
           <NavButton icon={<Gamepad2 size={24} />} label="Quiz" isActive={currentTab === 'test'} onClick={() => setCurrentTab('test')} />
         </div>
+
+        {/* Global Feedback Overlay */}
+        {feedback && <FeedbackOverlay {...feedback} />}
       </div>
     </div>
   )
+}
+
+function FeedbackOverlay({ type, title, subtitle, icon }) {
+  const isAchievement = type === 'achievement';
+  const isSuccess = type === 'success';
+
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 pointer-events-none">
+       <div className={`
+         w-full max-w-[280px] rounded-[2.5rem] p-8 flex flex-col items-center text-center shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)] border-2 border-white/50 backdrop-blur-2xl
+         animate-in fade-in zoom-in slide-in-from-bottom-12 duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)
+         ${isAchievement ? 'bg-linear-to-br from-yellow-400/90 via-orange-500/90 to-amber-500/90 text-white' : ''}
+         ${isSuccess ? 'bg-white/90 text-emerald-600' : ''}
+         ${type === 'error' ? 'bg-white/90 text-rose-600' : ''}
+       `}>
+         <div className={`
+            text-6xl mb-4 filter drop-shadow-xl animate-bounce
+            ${isAchievement ? 'scale-125' : ''}
+         `}>
+           {icon || (isSuccess ? '✅' : '❌')}
+         </div>
+         <h2 className={`text-2xl font-black tracking-tight ${isAchievement ? 'text-white' : 'text-slate-800'}`}>{title}</h2>
+         {subtitle && (
+           <p className={`text-sm font-bold mt-2 opacity-90 ${isAchievement ? 'text-white/90' : 'text-slate-500'}`}>{subtitle}</p>
+         )}
+         {isAchievement && (
+           <div className="mt-4 px-4 py-1.5 bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/30">
+             +100 XP Bonus
+           </div>
+         )}
+       </div>
+    </div>
+  );
 }
 
 function NavButton({ icon, label, isActive, onClick }) {
@@ -594,7 +644,6 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
 // ==========================================
 // TEST VIEW
 // ==========================================
-function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockAchievement, wrongCounts, setWrongCounts }) {
   const [question, setQuestion] = useState(null);
   const [options, setOptions] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -708,13 +757,6 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
           </div>
         </div>
       </header>
-
-      {/* Floating Feedback */}
-      {selectedAnswer !== null && (
-        <div className={`text-center font-bold text-sm mb-3 animate-in slide-in-from-bottom-2 fade-in ${isCorrect ? 'text-green-500' : 'text-rose-500'}`}>
-          {feedbackMsg}
-        </div>
-      )}
 
       {/* Question Card */}
       <div className="bg-white/80 backdrop-blur-xl rounded-4xl p-8 shadow-[0_20px_40px_-15px_rgba(99,102,241,0.15)] border border-white mb-8 flex-1 flex flex-col items-center justify-center relative z-10 transition-all duration-300 hover:shadow-[0_25px_50px_-15px_rgba(99,102,241,0.2)]">
