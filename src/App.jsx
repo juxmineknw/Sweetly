@@ -1639,47 +1639,60 @@ function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Your browser doesn't support speech recognition. Try Chrome!");
+      alert("เบราว์เซอร์ของคุณไม่รองรับการสั่งงานด้วยเสียง กรุณาลองใช้ Chrome หรือ Safari เวอร์ชั่นล่าสุดครับ");
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = true;
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false; // Important for mobile to stop after speaking
 
-    recognition.onstart = () => {
-      setIsListening(true);
-      setTranscript('');
-    };
+      recognition.onstart = () => {
+        setIsListening(true);
+        setTranscript('');
+      };
 
-    recognition.onresult = (event) => {
-      const current = event.resultIndex;
-      const resultTranscript = event.results[current][0].transcript;
-      setTranscript(resultTranscript);
+      recognition.onresult = (event) => {
+        const current = event.resultIndex;
+        const resultTranscript = event.results[current][0].transcript;
+        setTranscript(resultTranscript);
 
-      if (labMode === 'reading' && question) {
-        const spokenWords = resultTranscript.toLowerCase().split(' ');
-        setReadingResult(prev => prev.map(item => {
-          if (item.status === 'correct') return item;
-          const cleanPassageWord = item.word.toLowerCase().replace(/[.,?!]/g, '');
-          if (spokenWords.includes(cleanPassageWord)) {
-            return { ...item, status: 'correct' };
-          }
-          return item;
-        }));
-      }
-    };
+        if (labMode === 'reading' && question) {
+          const spokenWords = resultTranscript.toLowerCase().split(' ');
+          setReadingResult(prev => prev.map(item => {
+            if (item.status === 'correct') return item;
+            const cleanPassageWord = item.word.toLowerCase().replace(/[.,?!]/g, '');
+            if (spokenWords.includes(cleanPassageWord)) {
+              return { ...item, status: 'correct' };
+            }
+            return item;
+          }));
+        }
+      };
 
-    recognition.onend = () => {
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          alert("กรุณาอนุญาตให้เข้าถึงไมโครโฟนในการตั้งค่าเบราว์เซอร์ของคุณด้วยครับ");
+        } else if (event.error === 'network') {
+          alert("เกิดปัญหาเกี่ยวกับเครือข่าย กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตครับ");
+        }
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.error('Failed to start recognition:', err);
       setIsListening(false);
-    };
-
-    recognition.onerror = (event) => {
-      console.error(event.error);
-      setIsListening(false);
-    };
-
-    recognition.start();
+      alert("ไม่สามารถเริ่มการทำงานของไมโครโฟนได้ กรุณาลองใหม่อีกครั้งครับ");
+    }
   };
 
   const startMode = (mode) => {
