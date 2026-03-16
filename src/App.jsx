@@ -642,7 +642,7 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
   };
 
   return (
-    <div className="flex flex-col items-center py-6 px-4 h-full animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
+    <div className="flex flex-col items-center justify-center min-h-full py-6 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
       
       {/* Decorative Blur Backgrounds */}
       <div className="absolute top-[20%] right-[-20%] w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -680,7 +680,7 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
           <div className={`relative w-full h-full transition-all duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
             
             {/* Front Side: English Word */}
-            <div className={`absolute inset-0 w-full h-full bg-white rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center border border-white backface-hidden relative overflow-hidden transition-colors duration-500
+            <div className={`absolute inset-0 w-full h-full bg-white rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center border border-white backface-hidden overflow-hidden transition-colors duration-500
               ${knownWords.has(currentCard.index) ? 'border-emerald-200/50 bg-emerald-50/10' : ''}
               ${unknownWords.has(currentCard.index) ? 'border-rose-200/50 bg-rose-50/20' : ''}
             `}>
@@ -717,7 +717,7 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
             </div>
 
             {/* Back Side: Thai Meaning & Sentences */}
-            <div className="absolute inset-0 w-full h-full bg-linear-to-br from-pink-50 via-purple-50 to-indigo-100 text-slate-800 rounded-4xl shadow-[0_25px_50px_-12px_rgba(99,102,241,0.25)] flex flex-col items-center justify-center p-8 backface-hidden transform-[rotateY(180deg)] border-2 border-white relative">
+            <div className="absolute inset-0 w-full h-full bg-linear-to-br from-pink-50 via-purple-50 to-indigo-100 text-slate-800 rounded-4xl shadow-[0_25px_50px_-12px_rgba(99,102,241,0.25)] flex flex-col items-center justify-center p-8 backface-hidden transform-[rotateY(180deg)] border-2 border-white">
               {/* Soft glow effects inside the pastel card for a dreamy feel */}
               <div className="absolute top-0 right-0 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 pointer-events-none"></div>
               <div className="absolute bottom-0 left-0 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 pointer-events-none"></div>
