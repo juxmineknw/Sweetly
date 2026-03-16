@@ -1,22 +1,47 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import wordsData from './data/oxford_3000_full.json';
+import { passagesData } from './data/passages';
 import { 
   Plus, Search, Settings, Home, Layers, Gamepad2, 
   Trash2, X, ChevronRight, CheckCircle2, AlertCircle, 
   Trophy, Flame, Award, Zap, Star, Layout, 
   ArrowRight, RefreshCw, BookOpen, Clock, Heart,
-  Volume2
+  Volume2, Mic
 } from 'lucide-react';
 
 const speakText = (text, lang = 'en-US') => {
-  if (!window.speechSynthesis) return;
+  if (!window.speechSynthesis || !text) return;
+  
+  // Cancel any ongoing speech
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = lang;
-  utterance.rate = 0.9;
-  window.speechSynthesis.speak(utterance);
+  
+  const utter = () => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    
+    const voices = window.speechSynthesis.getVoices();
+    const britishFemaleVoice = voices.find(v => 
+      (v.lang.startsWith('en-GB')) && 
+      (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('hazel') || v.name.toLowerCase().includes('susan') || v.name.toLowerCase().includes('zira'))
+    ) || voices.find(v => v.lang.startsWith('en-GB'));
+    
+    if (britishFemaleVoice) utterance.voice = britishFemaleVoice;
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // If voices are already loaded, speak immediately
+  if (window.speechSynthesis.getVoices().length > 0) {
+    utter();
+  } else {
+    // Wait for voices to be loaded
+    window.speechSynthesis.onvoiceschanged = () => {
+      utter();
+      window.speechSynthesis.onvoiceschanged = null; // Prevent multiple triggers
+    };
+  }
 };
 import './App.css'
-import wordsData from './data/oxford_3000_full.json';
 
 // === GAMIFICATION CONSTANTS ===
 const LEVELS = [
@@ -64,6 +89,14 @@ function App() {
     const saved = localStorage.getItem('sweetly_wrong_counts');
     return saved ? JSON.parse(saved) : {};
   });
+  const [srsData, setSrsData] = useState(() => {
+    const saved = localStorage.getItem('sweetly_srs');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [mnemonics, setMnemonics] = useState(() => {
+    const saved = localStorage.getItem('sweetly_mnemonics');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   // Gamification State
   const [xp, setXp] = useState(() => {
@@ -94,7 +127,9 @@ function App() {
   
   const triggerFeedback = useCallback((data, duration = 1800) => {
     setFeedback(data);
-    setTimeout(() => setFeedback(null), duration);
+    if (!data.sticky) {
+      setTimeout(() => setFeedback(null), duration);
+    }
   }, []);
 
   const unlockAchievement = useCallback((id) => {
@@ -149,6 +184,8 @@ function App() {
   useEffect(() => localStorage.setItem('sweetly_known', JSON.stringify(Array.from(knownWords))), [knownWords]);
   useEffect(() => localStorage.setItem('sweetly_unknown', JSON.stringify(Array.from(unknownWords))), [unknownWords]);
   useEffect(() => localStorage.setItem('sweetly_wrong_counts', JSON.stringify(wrongCounts)), [wrongCounts]);
+  useEffect(() => localStorage.setItem('sweetly_srs', JSON.stringify(srsData)), [srsData]);
+  useEffect(() => localStorage.setItem('sweetly_mnemonics', JSON.stringify(mnemonics)), [mnemonics]);
   useEffect(() => localStorage.setItem('sweetly_xp', xp.toString()), [xp]);
   useEffect(() => localStorage.setItem('sweetly_achievements', JSON.stringify(Array.from(achievements))), [achievements]);
   useEffect(() => localStorage.setItem('sweetly_streak', JSON.stringify(streakData)), [streakData]);
@@ -168,6 +205,8 @@ function App() {
       setKnownWords(new Set());
       setUnknownWords(new Set());
       setWrongCounts({});
+      setSrsData({});
+      setMnemonics({});
       setXp(0);
       setAchievements(new Set());
       setStreakData({ lastLoginDate: new Date().toDateString(), streakCount: 1 });
@@ -188,6 +227,13 @@ function App() {
               selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
             />
           )}
+          {currentTab === 'library' && (
+            <LibraryView 
+              knownWords={knownWords} setKnownWords={setKnownWords}
+              unknownWords={unknownWords} setUnknownWords={setUnknownWords}
+              mnemonics={mnemonics} setMnemonics={setMnemonics}
+            />
+          )}
           {currentTab === 'flashcards' && <FlashcardsView 
              knownWords={knownWords} setKnownWords={setKnownWords}
              unknownWords={unknownWords} setUnknownWords={setUnknownWords}
@@ -199,37 +245,63 @@ function App() {
              unknownWords={unknownWords} setUnknownWords={setUnknownWords}
              addXp={addXp} unlockAchievement={unlockAchievement}
              wrongCounts={wrongCounts} setWrongCounts={setWrongCounts}
+             srsData={srsData} setSrsData={setSrsData}
              triggerFeedback={triggerFeedback}
              selectedCategory={selectedCategory}
-          />}
+             mnemonics={mnemonics}
+           />}
+           {currentTab === 'match' && <MatchGameView 
+              addXp={addXp} 
+              triggerFeedback={triggerFeedback}
+              selectedCategory={selectedCategory}
+           />}
+           {currentTab === 'listen' && <ListeningLabView 
+              addXp={addXp} 
+              triggerFeedback={triggerFeedback}
+              selectedCategory={selectedCategory}
+           />}
         </div>
 
         {/* Bottom Nav */}
-        <div className="absolute bottom-0 w-full bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-50 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
-          <NavButton icon={<Home size={24} />} label="Home" isActive={currentTab === 'home'} onClick={() => setCurrentTab('home')} />
-          <NavButton icon={<Layers size={24} />} label="Flashcards" isActive={currentTab === 'flashcards'} onClick={() => setCurrentTab('flashcards')} />
-          <NavButton icon={<Gamepad2 size={24} />} label="Quiz" isActive={currentTab === 'test'} onClick={() => setCurrentTab('test')} />
+        <div className="absolute bottom-0 w-full bg-white/80 backdrop-blur-xl border-t border-slate-100 px-2 py-4 flex justify-around items-center z-100 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+          <NavButton icon={<Home size={22} />} label="Home" isActive={currentTab === 'home'} onClick={() => setCurrentTab('home')} />
+          <NavButton icon={<BookOpen size={22} />} label="Lib" isActive={currentTab === 'library'} onClick={() => setCurrentTab('library')} />
+          <NavButton icon={<Layers size={22} />} label="Cards" isActive={currentTab === 'flashcards'} onClick={() => setCurrentTab('flashcards')} />
+          <NavButton icon={<Gamepad2 size={22} />} label="Quiz" isActive={currentTab === 'test'} onClick={() => setCurrentTab('test')} />
+          <NavButton icon={<Zap size={22} />} label="Match" isActive={currentTab === 'match'} onClick={() => setCurrentTab('match')} />
+          <NavButton icon={<Volume2 size={22} />} label="Listen" isActive={currentTab === 'listen'} onClick={() => setCurrentTab('listen')} />
         </div>
 
         {/* Global Feedback Overlay */}
-        {feedback && <FeedbackOverlay {...feedback} />}
+        {feedback && (
+          <FeedbackOverlay 
+            {...feedback} 
+            onClose={() => {
+              setFeedback(null);
+              if (feedback.onNext) feedback.onNext();
+            }} 
+          />
+        )}
       </div>
     </div>
   )
 }
 
-function FeedbackOverlay({ type, title, subtitle, icon }) {
+function FeedbackOverlay({ type, title, subtitle, icon, sticky, onClose }) {
   const isAchievement = type === 'achievement';
   const isSuccess = type === 'success';
 
   return (
-    <div className="fixed inset-0 z-1000 flex items-center justify-center p-6 pointer-events-none">
+    <div 
+      onClick={sticky ? onClose : undefined}
+      className={`fixed inset-0 z-1000 flex items-center justify-center p-6 ${sticky ? 'cursor-pointer pointer-events-auto bg-black/10' : 'pointer-events-none'}`}
+    >
        <div className={`
          w-full max-w-[280px] rounded-[2.5rem] p-8 flex flex-col items-center text-center shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)] border-2 border-white/50 backdrop-blur-2xl
          animate-in fade-in zoom-in slide-in-from-bottom-12 duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)
          ${isAchievement ? 'bg-linear-to-br from-yellow-400/90 via-orange-500/90 to-amber-500/90 text-white' : ''}
          ${isSuccess ? 'bg-white/90 text-emerald-600' : ''}
-         ${type === 'error' ? 'bg-white/90 text-rose-600' : ''}
+         ${type === 'error' ? 'bg-rose-500 text-white border-rose-400' : ''}
        `}>
          <div className={`
             text-6xl mb-4 filter drop-shadow-xl animate-bounce
@@ -237,14 +309,17 @@ function FeedbackOverlay({ type, title, subtitle, icon }) {
          `}>
            {icon || (isSuccess ? '✅' : '❌')}
          </div>
-         <h2 className={`text-2xl font-black tracking-tight ${isAchievement ? 'text-white' : 'text-slate-800'}`}>{title}</h2>
+         <h2 className={`text-2xl font-black tracking-tight ${isAchievement || type === 'error' ? 'text-white' : 'text-slate-800'}`}>{title}</h2>
          {subtitle && (
-           <p className={`text-sm font-bold mt-2 opacity-90 ${isAchievement ? 'text-white/90' : 'text-slate-500'}`}>{subtitle}</p>
+           <p className={`text-sm font-bold mt-2 opacity-90 ${isAchievement || type === 'error' ? 'text-white/90' : 'text-slate-500'}`}>{subtitle}</p>
          )}
-         {isAchievement && (
-           <div className="mt-4 px-4 py-1.5 bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/30">
-             +100 XP Bonus
-           </div>
+         {sticky && (
+           <button 
+             onClick={(e) => { e.stopPropagation(); onClose(); }}
+             className="mt-8 w-full py-4 bg-white/20 hover:bg-white/30 rounded-2xl text-sm font-black uppercase tracking-widest transition-all border border-white/30 flex items-center justify-center gap-2"
+           >
+             Next Question <ArrowRight size={18} />
+           </button>
          )}
        </div>
     </div>
@@ -278,8 +353,8 @@ function HomeView({ knownWords, unknownWords, resetProgress, xp, achievements, s
     if (selectedCategory === 'All') {
       acc.push(idx);
     } else {
-      const levelMatch = word.level === selectedCategory;
-      const posMatch = word.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''));
+      const levelMatch = word && word.level === selectedCategory;
+      const posMatch = word && word.pos && word.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''));
       if (levelMatch || posMatch) acc.push(idx);
     }
     return acc;
@@ -302,10 +377,10 @@ function HomeView({ knownWords, unknownWords, resetProgress, xp, achievements, s
     }
   };
   
-  const CATEGORIES = ['All', 'A1', 'A2', 'B1', 'B2', 'N.', 'V.', 'Adj.', 'Adv.'];
+  const CATEGORIES = ['All', 'A1', 'A2', 'B1', 'B2', 'C1', 'N.', 'V.', 'Adj.', 'Adv.'];
 
   return (
-    <div className="p-4 sm:p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 relative h-full flex flex-col">
+    <div className="p-4 sm:p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 relative min-h-full">
       
       {/* Decorative Blur Backgrounds */}
       <div className="absolute top-[-50px] left-[-50px] w-48 h-48 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -321,7 +396,7 @@ function HomeView({ knownWords, unknownWords, resetProgress, xp, achievements, s
       </header>
 
       {/* User Profile / Level Card */}
-      <div className="bg-white/70 backdrop-blur-xl rounded-[1.5rem] p-4 shadow-[0_15px_30px_-15px_rgba(0,0,0,0.05)] border border-white/80 mb-4 relative overflow-hidden group transition-all duration-500">
+      <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-4 shadow-[0_15px_30px_-15px_rgba(0,0,0,0.05)] border border-white/80 mb-4 relative overflow-hidden group transition-all duration-500">
         <div className="absolute -top-6 -right-6 p-4 opacity-5 pointer-events-none group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
            <Trophy size={100} className="text-indigo-900" />
         </div>
@@ -368,6 +443,21 @@ function HomeView({ knownWords, unknownWords, resetProgress, xp, achievements, s
              </div>
               <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Badges</div>
            </div>
+        </div>
+        
+        {/* Simple Heatmap Mockup for Systematic feel */}
+        <div className="mt-4 pt-4 border-t border-slate-100/50">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Activity Heatmap</span>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4].map(i => <div key={i} className={`w-1.5 h-1.5 rounded-xs ${i === 1 ? 'bg-slate-100' : i === 2 ? 'bg-indigo-200' : 'bg-indigo-400'}`}></div>)}
+            </div>
+          </div>
+          <div className="grid grid-cols-12 gap-1">
+             {Array.from({ length: 24 }).map((_, i) => (
+               <div key={i} className={`aspect-square rounded-xs ${i > 18 ? 'bg-indigo-500' : i > 12 ? 'bg-indigo-300' : i > 5 ? 'bg-indigo-100' : 'bg-slate-100'}`}></div>
+             ))}
+          </div>
         </div>
       </div>
 
@@ -423,7 +513,41 @@ function HomeView({ knownWords, unknownWords, resetProgress, xp, achievements, s
         </div>
       </div>
 
-      {/* Main Stats Card */}
+      {/* Course Roadmap */}
+      <h3 className="font-bold text-slate-800 mb-3 ml-1 flex items-center gap-2 text-base">
+         <Gamepad2 size={16} className="text-indigo-500" /> Roadmap
+      </h3>
+      <div className="bg-white/70 backdrop-blur-md p-4 rounded-[1.5rem] border border-white mb-6">
+        <div className="flex justify-between items-center mb-4">
+           <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Oxford 3000 Journey</span>
+           <span className="text-[10px] font-bold text-indigo-500">{progressPercent}% Completed</span>
+        </div>
+        <div className="space-y-4">
+          {['A1', 'A2', 'B1', 'B2', 'C1'].map((level) => {
+            const levelWords = wordsData.filter(w => w.level === level);
+            const levelIndices = wordsData.reduce((acc, w, i) => (w.level === level ? [...acc, i] : acc), []);
+            const levelKnown = levelIndices.filter(i => knownWords.has(i)).length;
+            const levelPercent = Math.round((levelKnown / levelWords.length) * 100);
+            
+            return (
+              <div key={level} className="relative">
+                <div className="flex justify-between text-[10px] font-bold mb-1 px-1">
+                  <span className={levelPercent === 100 ? 'text-emerald-500' : 'text-slate-500'}>{level} - {levelPercent === 100 ? 'Mastered!' : 'In Progress'}</span>
+                  <span className="text-slate-400">{levelKnown}/{levelWords.length} words</span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-50">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-1000 ${levelPercent === 100 ? 'bg-emerald-400' : 'bg-indigo-400'}`}
+                    style={{ width: `${levelPercent}%` }}
+                  ></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Stats and Achievements */}
       <h3 className="font-bold text-slate-800 mb-3 ml-1 flex items-center gap-2 text-base">
          <Layers size={16} className="text-purple-500" /> Stats
       </h3>
@@ -452,11 +576,10 @@ function HomeView({ knownWords, unknownWords, resetProgress, xp, achievements, s
         </div>
       </div>
 
-      {/* Achievements Locker */}
-      <h3 className="font-bold text-slate-800 mb-3 ml-1 flex items-center gap-2 text-base">
+      <h3 className="font-bold text-slate-800 mb-3 ml-1 flex items-center gap-2 text-base mt-2">
         <Trophy size={16} className="text-yellow-500" /> Locker
       </h3>
-      <div className="grid grid-cols-2 gap-3 mb-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         {Object.values(ACHIEVEMENTS_DATA).map(badge => {
           const unlocked = achievements.has(badge.id);
           return (
@@ -533,6 +656,170 @@ function WordListModal({ type, onClose, knownWords, unknownWords, selectedCatego
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// LIBRARY VIEW
+// ==========================================
+function LibraryView({ knownWords, setKnownWords, unknownWords, setUnknownWords, mnemonics, setMnemonics }) {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('All'); // 'All' | 'Mastered' | 'Review' | 'Unseen'
+  const [levelFilter, setLevelFilter] = useState('All');
+
+  const filteredWords = useMemo(() => {
+    return wordsData.map((w, i) => ({ ...w, index: i })).filter(word => {
+      // Robustness checks for data properties
+      const wordText = word.word || '';
+      const meaningText = word.meaning_th || '';
+      
+      const matchSearch = wordText.toLowerCase().includes(search.toLowerCase()) || 
+                          meaningText.toLowerCase().includes(search.toLowerCase());
+      
+      const status = knownWords.has(word.index) ? 'Mastered' : 
+                     unknownWords.has(word.index) ? 'Review' : 'Unseen';
+      const matchFilter = filter === 'All' || status === filter;
+      
+      const matchLevel = levelFilter === 'All' || word.level === levelFilter;
+      
+      return matchSearch && matchFilter && matchLevel;
+    });
+  }, [search, filter, levelFilter, knownWords, unknownWords]);
+
+  const toggleMastered = (idx) => {
+    setKnownWords(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else {
+        next.add(idx);
+        setUnknownWords(u => {
+          const uNext = new Set(u);
+          uNext.delete(idx);
+          return uNext;
+        });
+      }
+      return next;
+    });
+  };
+
+  const toggleReview = (idx) => {
+    setUnknownWords(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else {
+        next.add(idx);
+        setKnownWords(k => {
+          const kNext = new Set(k);
+          kNext.delete(idx);
+          return kNext;
+        });
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div className="p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 min-h-full">
+      <header className="mb-6">
+        <h2 className="text-3xl font-black text-slate-800 tracking-tight">Word Library</h2>
+        <p className="text-slate-400 text-[11px] font-bold mt-1 uppercase tracking-widest">Browse 3,000 Vocabulary</p>
+      </header>
+
+      <div className="space-y-4 mb-6">
+        {/* Search */}
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search words or meanings..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-12 pr-4 py-4 bg-white/70 backdrop-blur-md rounded-2xl border border-white shadow-[0_10px_20px_-10px_rgba(0,0,0,0.05)] focus:border-indigo-200 outline-hidden transition-all text-sm font-bold text-slate-700"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {['All', 'Mastered', 'Review', 'Unseen'].map(f => (
+            <button 
+              key={f} onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border
+                ${filter === f ? 'bg-indigo-500 text-white border-transparent shadow-md' : 'bg-white/80 text-slate-400 border-slate-100'}`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+          {['All', 'A1', 'A2', 'B1', 'B2', 'C1'].map(l => (
+            <button 
+              key={l} onClick={() => setLevelFilter(l)}
+              className={`px-4 py-2 rounded-xl font-bold whitespace-nowrap transition-all border
+                ${levelFilter === l ? 'bg-purple-500 text-white border-transparent shadow-md' : 'bg-white/80 text-slate-400 border-slate-100'}`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3 pb-10">
+        {filteredWords.length === 0 ? (
+          <div className="py-20 text-center opacity-40">
+            <span className="text-5xl block mb-4">🔦</span>
+            <p className="font-bold text-xs uppercase tracking-widest">No words found</p>
+          </div>
+        ) : (
+          filteredWords.slice(0, 50).map((word) => (
+            <div key={word.index} className="bg-white/80 backdrop-blur-sm p-4 rounded-3xl border border-white shadow-sm group hover:border-indigo-100 transition-all">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-slate-800 text-lg tracking-tight group-hover:text-indigo-600 transition-colors">{word.word}</span>
+                    <span className="text-[9px] font-black px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded-md">{word.level}</span>
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium mt-0.5">{word.meaning_th}</div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => toggleReview(word.index)}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${unknownWords.has(word.index) ? 'bg-rose-100 text-rose-500 shadow-inner' : 'bg-slate-50 text-slate-300 hover:text-rose-400'}`}
+                  >
+                    <AlertCircle size={18} />
+                  </button>
+                  <button 
+                    onClick={() => toggleMastered(word.index)}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${knownWords.has(word.index) ? 'bg-emerald-100 text-emerald-500 shadow-inner' : 'bg-slate-50 text-slate-300 hover:text-emerald-400'}`}
+                  >
+                    <CheckCircle2 size={18} />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Mnemonic Section */}
+              <div className="mt-3 pt-3 border-t border-slate-50">
+                <div className="relative">
+                  <Heart size={14} className={`absolute left-0 top-1/2 -translate-y-1/2 ${mnemonics[word.index] ? 'text-rose-400' : 'text-slate-200'}`} />
+                  <input 
+                    type="text"
+                    placeholder="Add a memory note / mnemonic..."
+                    value={mnemonics[word.index] || ''}
+                    onChange={(e) => {
+                      setMnemonics(prev => ({ ...prev, [word.index]: e.target.value }));
+                    }}
+                    className="w-full pl-6 bg-transparent outline-hidden text-[11px] font-bold text-slate-600 placeholder:text-slate-300"
+                  />
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+        {filteredWords.length > 50 && (
+          <p className="text-center text-[10px] text-slate-400 font-bold py-4 uppercase tracking-widest">Showing first 50 results</p>
+        )}
       </div>
     </div>
   );
@@ -782,7 +1069,7 @@ function FlashcardsView({ knownWords, setKnownWords, unknownWords, setUnknownWor
 // ==========================================
 // TEST VIEW
 // ==========================================
-function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockAchievement, wrongCounts, setWrongCounts, triggerFeedback, selectedCategory }) {
+function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockAchievement, wrongCounts, setWrongCounts, srsData, setSrsData, triggerFeedback, selectedCategory, mnemonics }) {
   const [question, setQuestion] = useState(null);
   const [options, setOptions] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -790,8 +1077,10 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [combo, setCombo] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState(0);
-  const [testMode, setTestMode] = useState('multiple'); // 'multiple' | 'fill'
+  const [testMode, setTestMode] = useState('multiple'); // 'multiple' | 'fill' | 'scramble'
   const [userInput, setUserInput] = useState('');
+  const [scrambledWords, setScrambledWords] = useState([]);
+  const [selectedSequence, setSelectedSequence] = useState([]);
 
   const generateQuestion = () => {
     let pool = wordsData.map((w, i) => ({ ...w, index: i }));
@@ -806,11 +1095,18 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
 
     if (pool.length === 0) return;
 
+    // Prioritize SRS words that are due
+    const now = Date.now();
+    const dueIndices = Object.keys(srsData).filter(idx => srsData[idx].nextReview <= now).map(Number);
+    const poolDue = pool.filter(w => dueIndices.includes(w.index));
+    
     // Prioritize unknown words in the filtered pool
     const filteredUnknowns = pool.filter(w => unknownWords.has(w.index));
     
     let targetWord;
-    if (filteredUnknowns.length > 0 && Math.random() > 0.3) {
+    if (poolDue.length > 0 && Math.random() > 0.2) {
+      targetWord = poolDue[Math.floor(Math.random() * poolDue.length)];
+    } else if (filteredUnknowns.length > 0 && Math.random() > 0.3) {
       targetWord = filteredUnknowns[Math.floor(Math.random() * filteredUnknowns.length)];
     } else {
       targetWord = pool[Math.floor(Math.random() * pool.length)];
@@ -829,6 +1125,22 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
     setSelectedAnswer(null);
     setIsCorrect(null);
     setUserInput('');
+    
+    // Choose mode: multiple choice, scramble, or completion
+    const rand = Math.random();
+    let mode = 'multiple';
+    if (rand > 0.6) mode = 'scramble';
+    else if (rand > 0.3) mode = 'completion';
+    
+    setTestMode(mode);
+    
+    if (mode === 'scramble') {
+      const sentence = targetWord.sentence_en;
+      const words = sentence.replace(/[.!?]/g, '').split(' ');
+      setScrambledWords([...words].sort(() => Math.random() - 0.5));
+      setSelectedSequence([]);
+    }
+
     setQuestionStartTime(Date.now());
   };
 
@@ -878,9 +1190,37 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
         next.delete(question.index);
         return next;
       });
+
+      // Update SRS Data
+      setSrsData(prev => {
+        const current = prev[question.index] || { stage: 0 };
+        const nextStage = Math.min(current.stage + 1, 5);
+        const intervals = [0, 1, 3, 7, 14, 30]; // Days
+        const nextReview = new Date();
+        nextReview.setDate(nextReview.getDate() + intervals[nextStage]);
+        
+        return {
+          ...prev,
+          [question.index]: {
+            stage: nextStage,
+            nextReview: nextReview.getTime(),
+            lastCorrect: Date.now()
+          }
+        };
+      });
     } else {
       setCombo(0);
       setWrongCounts(prev => ({ ...prev, [question.index]: (prev[question.index] || 0) + 1 }));
+      
+      // SRS Reset/Penalty
+      setSrsData(prev => ({
+        ...prev,
+        [question.index]: {
+          stage: 0,
+          nextReview: Date.now() + (1000 * 60 * 60), // Try again in 1 hour
+          lastCorrect: prev[question.index]?.lastCorrect || 0
+        }
+      }));
       
       triggerFeedback({
         type: 'error',
@@ -900,10 +1240,42 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
     setTimeout(generateQuestion, 1800);
   };
 
+  const handleScrambleClick = (word, index) => {
+    if (selectedAnswer !== null) return;
+    
+    // Add to selected sequence
+    const newSequence = [...selectedSequence, word];
+    setSelectedSequence(newSequence);
+    
+    // Remove from choices
+    const newChoices = [...scrambledWords];
+    newChoices.splice(index, 1);
+    setScrambledWords(newChoices);
+    
+    const targetWords = question.sentence_en.replace(/[.!?]/g, '').split(' ');
+    
+    if (newSequence.length === targetWords.length) {
+      const correct = newSequence.join(' ').toLowerCase() === targetWords.join(' ').toLowerCase();
+      handleAnswer({ word: correct ? question.word : 'WRONG' }); 
+    }
+  };
+
+  const handleUnscrambleClick = (word, index) => {
+    if (selectedAnswer !== null) return;
+    
+    // Remove from selected sequence
+    const newSequence = [...selectedSequence];
+    newSequence.splice(index, 1);
+    setSelectedSequence(newSequence);
+    
+    // Add back to choices
+    setScrambledWords(prev => [...prev, word].sort(() => Math.random() - 0.5));
+  };
+
   if (!question) return null;
 
   return (
-    <div className="p-6 h-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
+    <div className="p-6 min-h-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
       {/* Decorative Blur Backgrounds */}
       <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       
@@ -922,6 +1294,14 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
           >
             {testMode === 'multiple' ? '⌨️ Switch to Fill' : '🔘 Switch to MCQ'}
           </button>
+          {mnemonics[question.index] && (
+            <button 
+              onClick={() => triggerFeedback({ type: 'info', title: 'Hint', subtitle: mnemonics[question.index], icon: '💡' }, 3000)}
+              className="px-3 py-1 bg-amber-50 text-[10px] font-black uppercase tracking-wider text-amber-600 rounded-lg border border-amber-100 shadow-sm hover:bg-amber-100 transition-all"
+            >
+              💡 Show Hint
+            </button>
+          )}
           <div className="flex gap-2">
             {combo > 1 && (
               <div className="bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 flex items-center gap-1 animate-in slide-in-from-right zoom-in">
@@ -944,22 +1324,55 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
              ⚠️ Incorrect {wrongCounts[question.index]} times before
            </div>
          )}
-         <h3 className="text-5xl text-center font-black bg-clip-text text-transparent bg-linear-to-br from-slate-700 to-slate-900 drop-shadow-sm tracking-tight mt-6">
-           {testMode === 'multiple' ? question.word : question.meaning_th}
-         </h3>
-         <div className="mt-6 px-4 py-1.5 bg-linear-to-br from-indigo-50 to-purple-50 text-indigo-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100/50 shadow-sm flex items-center gap-2">
-            <span>{question.level}</span>
-            {testMode === 'multiple' && (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-200"></span>
-                <span>{question.pos}</span>
-              </>
-            )}
-         </div>
+          <h3 className={`text-center font-black bg-clip-text text-transparent bg-linear-to-br from-slate-700 to-slate-900 drop-shadow-sm tracking-tight mt-6 ${testMode === 'completion' ? 'text-2xl leading-relaxed' : 'text-5xl'}`}>
+            {testMode === 'multiple' ? question.word : 
+             (testMode === 'fill' || testMode === 'scramble') ? '???' : 
+             testMode === 'completion' ? question.sentence_en.replace(new RegExp(`\\b${question.word}\\b`, 'gi'), '_______') :
+             question.word}
+          </h3>
+          {(testMode === 'multiple' || testMode === 'fill' || testMode === 'completion') && (
+            <div className="mt-6 px-4 py-1.5 bg-linear-to-br from-indigo-50 to-purple-50 text-indigo-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100/50 shadow-sm flex items-center gap-2">
+              <span>{question.level}</span>
+              {(testMode === 'multiple' || testMode === 'completion') && (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-200"></span>
+                  <span>{question.pos}</span>
+                </>
+              )}
+            </div>
+          )}
+         {testMode === 'scramble' && (
+           <div className="mt-4 text-center">
+             <div className="text-xs text-slate-400 font-bold mb-4 uppercase tracking-widest">{question.meaning_th}</div>
+             <div className="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px] p-4 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                {selectedSequence.map((w, i) => (
+                  <button 
+                    key={i} 
+                    onClick={() => handleUnscrambleClick(w, i)}
+                    disabled={selectedAnswer !== null}
+                    className="px-3 py-1 bg-indigo-500 text-white rounded-lg text-sm font-bold animate-in zoom-in-50 hover:bg-rose-500 transition-colors cursor-pointer"
+                  >
+                    {w}
+                  </button>
+                ))}
+              </div>
+             <div className="flex flex-wrap justify-center gap-2">
+               {scrambledWords.map((w, i) => (
+                 <button 
+                   key={i}
+                   onClick={() => handleScrambleClick(w, i)}
+                   className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-indigo-300 hover:bg-indigo-50 transition-all shadow-sm active:scale-95"
+                 >
+                   {w}
+                 </button>
+               ))}
+             </div>
+           </div>
+         )}
       </div>
 
       <div className="space-y-4 mb-6 relative z-10">
-        {testMode === 'multiple' ? (
+        {(testMode === 'multiple' || testMode === 'completion') ? (
           <div className="grid grid-cols-1 gap-4">
             {options.map((option, idx) => {
               let btnStyle = "bg-white/90 backdrop-blur-sm border border-slate-100 text-slate-600 shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_20px_-5px_rgba(99,102,241,0.15)] hover:border-indigo-200 hover:-translate-y-1 hover:bg-linear-to-r hover:from-white hover:to-indigo-50";
@@ -982,13 +1395,13 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
                   key={idx} onClick={() => handleAnswer(option)} disabled={selectedAnswer !== null}
                   className={`p-5 rounded-3xl w-full text-left font-bold transition-all duration-300 relative flex items-center justify-between ${btnStyle} active:scale-95`}
                 >
-                  <span className="text-lg tracking-wide">{option.meaning_th}</span>
+                  <span className="text-lg tracking-wide">{testMode === 'completion' ? option.word : option.meaning_th}</span>
                   {icon && <span className="text-2xl animate-in zoom-in spin-in-12">{icon}</span>}
                 </button>
               )
             })}
           </div>
-        ) : (
+        ) : testMode === 'fill' ? (
           <div className="flex flex-col gap-4">
             <div className="relative">
               <input 
@@ -1019,10 +1432,487 @@ function TestView({ setKnownWords, unknownWords, setUnknownWords, addXp, unlockA
               Check Answer
             </button>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
-  )
+  );
 }
+
+// ==========================================
+// MATCH GAME VIEW
+// ==========================================
+function MatchGameView({ addXp, triggerFeedback, selectedCategory }) {
+  const [cards, setCards] = useState([]);
+  const [flipped, setFlipped] = useState([]);
+  const [matched, setMatched] = useState([]);
+  const [timer, setTimer] = useState(30);
+  const [gameState, setGameState] = useState('idle'); // 'idle' | 'playing' | 'ended'
+
+  const startNewGame = useCallback(() => {
+    let pool = wordsData.map((w, i) => ({ ...w, index: i }));
+    if (selectedCategory !== 'All') {
+      pool = pool.filter(w => w.level === selectedCategory || w.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', '')));
+    }
+    
+    const picked = [...pool].sort(() => Math.random() - 0.5).slice(0, 6);
+    const gameCards = [];
+    picked.forEach(w => {
+      gameCards.push({ id: `w-${w.index}`, type: 'word', content: w.word, pairId: w.index });
+      gameCards.push({ id: `m-${w.index}`, type: 'meaning', content: w.meaning_th, pairId: w.index });
+    });
+    
+    setCards(gameCards.sort(() => Math.random() - 0.5));
+    setFlipped([]);
+    setMatched([]);
+    setTimer(30);
+    setGameState('playing');
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    let interval;
+    if (gameState === 'playing' && timer > 0) {
+      interval = setInterval(() => setTimer(t => t - 1), 1000);
+    } else if (timer === 0 && gameState === 'playing') {
+      setTimeout(() => setGameState('ended'), 0);
+      triggerFeedback({ type: 'error', title: 'Time Up!', subtitle: "Try again!", icon: '⏰' });
+    }
+    return () => clearInterval(interval);
+  }, [gameState, timer, triggerFeedback]);
+
+  const handleCardClick = (card) => {
+    if (gameState !== 'playing' || flipped.length === 2 || matched.includes(card.id) || flipped.some(c => c.id === card.id)) return;
+    
+    const newFlipped = [...flipped, card];
+    setFlipped(newFlipped);
+    
+    if (newFlipped.length === 2) {
+      if (newFlipped[0].pairId === newFlipped[1].pairId) {
+        const nextMatched = [...matched, newFlipped[0].id, newFlipped[1].id];
+        setMatched(nextMatched);
+        setFlipped([]);
+        if (nextMatched.length === 12) {
+          setGameState('ended');
+          addXp(30);
+          triggerFeedback({ type: 'success', title: 'Winner!', subtitle: 'Match Master! +30 XP', icon: '🏆' });
+        }
+      } else {
+        setTimeout(() => setFlipped([]), 1000);
+      }
+    }
+  };
+
+  return (
+    <div className="p-6 flex flex-col items-center justify-center min-h-full py-6 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
+      <header className="mb-6 w-full text-center">
+        <h2 className="text-3xl font-black bg-clip-text text-transparent bg-linear-to-r from-indigo-600 to-purple-500 tracking-tight">Match</h2>
+        <div className="flex justify-between mt-2 px-1 text-sm font-black">
+           <div className={timer < 10 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}>⏰ {timer}s</div>
+           <div className="text-indigo-500">🏆 {matched.length / 2}/6</div>
+        </div>
+      </header>
+
+      {gameState === 'idle' ? (
+        <div className="bg-white/80 backdrop-blur-xl rounded-4xl p-8 shadow-xl border border-white text-center flex flex-col items-center justify-center space-y-6 flex-1 w-full max-w-sm">
+           <div className="text-6xl animate-bounce">⚡</div>
+           <h3 className="text-2xl font-black text-slate-800">Ready?</h3>
+           <button onClick={startNewGame} className="w-full py-4 bg-indigo-500 text-white font-black uppercase tracking-widest rounded-3xl shadow-lg active:scale-95">Start Game</button>
+        </div>
+      ) : gameState === 'ended' ? (
+        <div className="bg-white/80 backdrop-blur-xl rounded-4xl p-8 shadow-xl border border-white text-center flex flex-col items-center justify-center space-y-6 flex-1 w-full max-w-sm">
+           <div className="text-6xl">{matched.length === 12 ? '🤩' : '⏰'}</div>
+           <h3 className="text-2xl font-black text-slate-800">{matched.length === 12 ? 'Victory!' : 'Time Up!'}</h3>
+           <button onClick={startNewGame} className="w-full py-4 bg-indigo-500 text-white font-black uppercase tracking-widest rounded-3xl shadow-lg active:scale-95">Play Again</button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-3 w-full max-w-sm flex-1 mb-6">
+          {cards.map((card) => {
+            const isFlipped = flipped.some(c => c.id === card.id);
+            const isMatched = matched.includes(card.id);
+            return (
+              <button 
+                key={card.id}
+                onClick={() => handleCardClick(card)}
+                className={`aspect-3/4 rounded-2xl p-2 text-[10px] font-black leading-tight transition-all duration-300 relative border-2 flex items-center justify-center text-center
+                  ${isMatched ? 'bg-emerald-50 border-emerald-200 text-emerald-600 opacity-60' :
+                    isFlipped ? 'bg-indigo-500 border-indigo-400 text-white scale-105 shadow-md' :
+                    'bg-white border-white shadow-sm hover:border-indigo-200 hover:bg-slate-50 text-slate-600'}
+                `}
+              >
+                {card.content}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
+  const [labMode, setLabMode] = useState('select'); // 'select' | 'identify' | 'dictate' | 'pronounce' | 'reading'
+  const [question, setQuestion] = useState(null);
+  const [options, setOptions] = useState([]);
+  const [userInput, setUserInput] = useState('');
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [readingResult, setReadingResult] = useState([]); // Array of { word: string, status: 'idle' | 'correct' | 'wrong' }
+
+  const generateQuestion = useCallback((mode = labMode) => {
+    if (mode === 'reading') {
+      const target = passagesData[Math.floor(Math.random() * passagesData.length)];
+      setQuestion(target);
+      setReadingResult(target.text.split(' ').map(w => ({ word: w, status: 'idle' })));
+      setUserInput('');
+      setIsCorrect(null);
+      setTranscript('');
+      return;
+    }
+
+    let pool = wordsData.map((w, i) => ({ ...w, index: i }));
+    if (selectedCategory !== 'All') {
+      pool = pool.filter(w => w.level === selectedCategory || (w && w.pos && w.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''))));
+    }
+    
+    if (pool.length === 0) return;
+
+    const target = pool[Math.floor(Math.random() * pool.length)];
+    setQuestion(target);
+    setUserInput('');
+    setIsCorrect(null);
+    setTranscript('');
+
+    if (mode === 'identify') {
+      const distractors = pool
+        .filter(w => w.index !== target.index)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+      setOptions([...distractors, target].sort(() => Math.random() - 0.5));
+    }
+
+    // Speak initial audio
+    setTimeout(() => speakText(mode === 'dictate' ? target.sentence_en : target.word), 500);
+  }, [selectedCategory, labMode]);
+
+  const handleAnswer = (answer) => {
+    if (isCorrect !== null) return;
+    
+    setScore(s => ({ ...s, total: s.total + 1 }));
+    let isRight = false;
+    
+    if (labMode === 'identify') {
+      isRight = answer.word === question.word;
+    } else if (labMode === 'dictate') {
+      isRight = userInput.trim().toLowerCase().replace(/[.,?!]/g, '') === question.sentence_en.toLowerCase().replace(/[.,?!]/g, '');
+    } else if (labMode === 'pronounce') {
+      isRight = transcript.trim().toLowerCase().replace(/[.,?!]/g, '') === question.word.toLowerCase().replace(/[.,?!]/g, '');
+    }
+
+    setIsCorrect(isRight);
+
+    const titleCaseWord = question.word.charAt(0).toUpperCase() + question.word.slice(1).toLowerCase();
+
+    if (isRight) {
+      const reward = labMode === 'dictate' ? 25 : 15;
+      addXp(reward);
+      triggerFeedback({ 
+        type: 'success', 
+        title: titleCaseWord, 
+        subtitle: `Correct! +${reward} XP`, 
+        icon: '🎧',
+        sticky: true,
+        onNext: () => generateQuestion()
+      });
+    } else {
+      triggerFeedback({ 
+        type: 'error', 
+        title: titleCaseWord, 
+        subtitle: 'Listen closely and try again!', 
+        icon: '👂',
+        sticky: true,
+        onNext: () => generateQuestion()
+      });
+    }
+  };
+
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Your browser doesn't support speech recognition. Try Chrome!");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setTranscript('');
+    };
+
+    recognition.onresult = (event) => {
+      const current = event.resultIndex;
+      const resultTranscript = event.results[current][0].transcript;
+      setTranscript(resultTranscript);
+
+      if (labMode === 'reading' && question) {
+        const spokenWords = resultTranscript.toLowerCase().split(' ');
+        setReadingResult(prev => prev.map(item => {
+          if (item.status === 'correct') return item;
+          const cleanPassageWord = item.word.toLowerCase().replace(/[.,?!]/g, '');
+          if (spokenWords.includes(cleanPassageWord)) {
+            return { ...item, status: 'correct' };
+          }
+          return item;
+        }));
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event) => {
+      console.error(event.error);
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
+  const startMode = (mode) => {
+    setLabMode(mode);
+    setScore({ correct: 0, total: 0 });
+    generateQuestion(mode);
+  };
+
+  if (labMode === 'select') {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center min-h-full py-6 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="text-center mb-10">
+          <h2 className="text-4xl font-black bg-clip-text text-transparent bg-linear-to-r from-indigo-600 to-purple-50 tracking-tight mb-2">Listening Lab</h2>
+          <p className="text-slate-500 font-bold">Tune your ears to the sweetness of English</p>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4 w-full max-w-sm">
+          <button onClick={() => startMode('identify')} className="group flex items-center gap-6 p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-indigo-400 hover:shadow-xl hover:-translate-y-1 transition-all text-left">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">🎯</div>
+            <div>
+              <h4 className="font-black text-slate-800 text-lg">Identification</h4>
+              <p className="text-slate-500 text-xs font-bold leading-relaxed">Hear a word, find the meaning</p>
+            </div>
+          </button>
+
+          <button onClick={() => startMode('dictate')} className="group flex items-center gap-6 p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-purple-400 hover:shadow-xl hover:-translate-y-1 transition-all text-left">
+            <div className="w-16 h-16 rounded-2xl bg-purple-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">✍️</div>
+            <div>
+              <h4 className="font-black text-slate-800 text-lg">Dictation</h4>
+              <p className="text-slate-500 text-xs font-bold leading-relaxed">Type the full sentence you hear</p>
+            </div>
+          </button>
+          
+          <button onClick={() => startMode('pronounce')} className="group flex items-center gap-6 p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-emerald-400 hover:shadow-xl hover:-translate-y-1 transition-all text-left">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">🎙️</div>
+            <div>
+              <h4 className="font-black text-slate-800 text-lg">Pronunciation</h4>
+              <p className="text-slate-500 text-xs font-bold leading-relaxed">Speak out loud to test accuracy</p>
+            </div>
+          </button>
+
+          <button onClick={() => startMode('reading')} className="group flex items-center gap-6 p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-orange-400 hover:shadow-xl hover:-translate-y-1 transition-all text-left">
+            <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">📖</div>
+            <div>
+              <h4 className="font-black text-slate-800 text-lg">Reading Master</h4>
+              <p className="text-slate-500 text-xs font-bold leading-relaxed">Read full passages with live feedback</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 flex flex-col min-h-full py-6 px-4 animate-in fade-in duration-500">
+      <header className="flex justify-between items-center mb-8">
+        <button onClick={() => setLabMode('select')} className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-indigo-500 shadow-sm border border-slate-100 transition-all"><X size={20} /></button>
+        <div className="text-sm font-black text-slate-400 uppercase tracking-widest">{labMode} Mode</div>
+        <div className="text-sm font-black text-indigo-500">👂 {score.total} Qs</div>
+      </header>
+
+      <div className="flex-1 flex flex-col items-center justify-center gap-10">
+        <div className="flex flex-col items-center gap-6">
+          <button 
+            onClick={() => speakText(labMode === 'dictate' ? question.sentence_en : question.word)}
+            className="w-32 h-32 rounded-full bg-linear-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all group"
+          >
+            <Volume2 size={56} className="group-hover:animate-pulse" />
+          </button>
+        </div>
+
+        <div className="w-full max-w-sm">
+          {labMode === 'identify' ? (
+            <div className="grid grid-cols-2 gap-3">
+              {options.map((opt, i) => (
+                <button 
+                  key={i}
+                  onClick={() => handleAnswer(opt)}
+                  disabled={isCorrect !== null}
+                  className={`p-4 rounded-2xl font-bold text-sm transition-all border-2 text-center
+                    ${isCorrect === null ? 'bg-white border-slate-100 hover:border-indigo-200 hover:bg-slate-50 text-slate-600 shadow-sm' :
+                      opt.word === question.word ? 'bg-emerald-50 border-emerald-400 text-emerald-700 scale-105' : 
+                      'bg-white border-slate-100 text-slate-300'}
+                  `}
+                >
+                  {opt.meaning_th}
+                </button>
+              ))}
+            </div>
+          ) : labMode === 'dictate' ? (
+            <div className="space-y-4">
+              <textarea 
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Type what you hear..."
+                disabled={isCorrect !== null}
+                className={`w-full p-6 bg-white rounded-3xl border-2 transition-all outline-hidden font-bold text-center text-lg shadow-lg resize-none h-32
+                  ${isCorrect === null ? 'border-slate-100 focus:border-purple-400' : isCorrect ? 'border-emerald-400 bg-emerald-50/50' : 'border-rose-400 bg-rose-50/50'}
+                `}
+              />
+              {isCorrect === false && (
+                <div className="text-center animate-in slide-in-from-top-2">
+                  <p className="text-rose-500 font-bold text-sm mb-1">Missed a bit!</p>
+                  <p className="text-slate-600 font-bold text-xs bg-slate-100 py-2 px-4 rounded-xl inline-block">{question.sentence_en}</p>
+                </div>
+              )}
+              <button 
+                onClick={() => handleAnswer()}
+                disabled={isCorrect !== null || !userInput.trim()}
+                className="w-full py-4 bg-linear-to-r from-indigo-500 to-purple-500 text-white font-black uppercase tracking-widest rounded-3xl shadow-lg active:scale-95 disabled:opacity-50"
+              >
+                Check Dictation
+              </button>
+            </div>
+          ) : labMode === 'pronounce' ? (
+            <div className="flex flex-col items-center gap-6">
+              <div className="relative">
+                {isListening && (
+                  <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping"></div>
+                )}
+                <button 
+                  onClick={startListening}
+                  disabled={isCorrect !== null}
+                  className={`w-24 h-24 rounded-full flex items-center justify-center transition-all shadow-xl relative z-10
+                    ${isCorrect === null ? (isListening ? 'bg-emerald-500 text-white' : 'bg-white text-slate-400 hover:text-indigo-500') :
+                      isCorrect ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}
+                  `}
+                >
+                  <Mic size={40} />
+                </button>
+              </div>
+              
+              <div className="w-full p-6 bg-white rounded-3xl border-2 border-slate-100 min-h-[100px] flex flex-col items-center justify-center text-center shadow-sm">
+                {isListening ? (
+                  <p className="text-emerald-500 font-bold animate-pulse">Listening...</p>
+                ) : transcript ? (
+                  <p className="text-xl font-bold text-slate-700">"{transcript}"</p>
+                ) : (
+                  <p className="text-slate-300 font-bold tracking-tight">Tap mic and speak "{question.word}"</p>
+                )}
+              </div>
+
+              {transcript && isCorrect === null && (
+                <button 
+                  onClick={() => handleAnswer()}
+                  className="w-full py-4 bg-linear-to-r from-emerald-500 to-teal-500 text-white font-black uppercase tracking-widest rounded-3xl shadow-lg active:scale-95"
+                >
+                  Check Pronunciation
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-6 w-full">
+              <div className="text-center mb-4">
+                <h3 className="text-xl font-black text-slate-800">{question.title}</h3>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{question.level} Level</p>
+              </div>
+
+              <div className="bg-white p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-sm leading-relaxed text-lg font-medium text-slate-600 w-full text-justify relative group">
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <button onClick={() => alert(question.translation)} className="p-2 rounded-full bg-slate-50 text-slate-400 hover:text-indigo-500 hover:bg-white shadow-sm transition-all">🌏</button>
+                </div>
+                {readingResult.map((item, idx) => {
+                  let colorClass = "text-slate-400";
+                  if (item.status === 'correct') colorClass = "text-emerald-500 font-bold";
+                  if (item.status === 'wrong') colorClass = "text-rose-500 font-bold";
+                  return (
+                    <span key={idx} className={`${colorClass} transition-colors duration-300 mr-1.5 inline-block`}>
+                      {item.word}
+                    </span>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-col items-center gap-4 w-full">
+                <div className="relative">
+                  {isListening && (
+                    <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping"></div>
+                  )}
+                  <button 
+                    onClick={startListening}
+                    disabled={isCorrect !== null}
+                    className={`w-20 h-20 rounded-full flex items-center justify-center transition-all shadow-xl relative z-10
+                      ${isCorrect === null ? (isListening ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-white text-slate-400 hover:text-orange-500') :
+                        isCorrect ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}
+                    `}
+                  >
+                    <Mic size={32} />
+                  </button>
+                </div>
+                
+                {transcript && (
+                  <div className="text-center animate-in fade-in zoom-in duration-300 max-w-sm">
+                    <p className="text-xs font-black text-slate-300 uppercase tracking-widest mb-2">Heard</p>
+                    <p className="text-slate-600 font-bold italic">"{transcript}"</p>
+                  </div>
+                )}
+
+                <button 
+                  onClick={() => {
+                    const finalResult = readingResult.map(item => ({
+                      ...item,
+                      status: item.status === 'idle' ? 'wrong' : item.status
+                    }));
+                    setReadingResult(finalResult);
+
+                    const correctCount = finalResult.filter(r => r.status === 'correct').length;
+                    const accuracy = (correctCount / finalResult.length) * 100;
+                    
+                    setIsCorrect(accuracy > 70);
+                    addXp(Math.round(accuracy / 4));
+                    
+                    triggerFeedback({
+                      type: accuracy > 70 ? 'success' : 'error',
+                      title: accuracy > 70 ? 'Excellent Reading!' : 'Keep Practicing!',
+                      subtitle: `Accuracy: ${Math.round(accuracy)}% • +${Math.round(accuracy/4)} XP`,
+                      icon: accuracy > 70 ? '📖' : '👂',
+                      sticky: true,
+                      onNext: () => generateQuestion('reading')
+                    });
+                  }}
+                  className="w-full py-4 bg-linear-to-r from-orange-500 to-amber-500 text-white font-black uppercase tracking-widest rounded-3xl shadow-lg active:scale-95"
+                >
+                  Finish Reading
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export default App

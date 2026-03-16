@@ -1,5 +1,801 @@
 [
   {
+    "word": "abstract",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "นามธรรม / จับต้องไม่ได้",
+    "sentence_en": "Art can be so abstract.",
+    "sentence_th": "งานศิลปะบางทีก็ล้ำจนเข้าไม่ถึง"
+  },
+  {
+    "word": "advocate",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "สนับสนุน / ออกตัวแรง",
+    "sentence_en": "I advocate for mental health.",
+    "sentence_th": "ฉันสนับสนุนเรื่องสุขภาพจิตแบบสุดตัว"
+  },
+  {
+    "word": "aesthetic",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ความสวยงาม / สไตล์",
+    "sentence_en": "Your room has a great aesthetic.",
+    "sentence_th": "ห้องเธอคือนับวันยิ่งคุมโทนสวยดีนะ"
+  },
+  {
+    "word": "allocate",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "จัดสรร / แบ่งงบ",
+    "sentence_en": "Allocate your time wisely.",
+    "sentence_th": "จัดสรรเวลาให้ดีๆ นะ"
+  },
+  {
+    "word": "ambiguous",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "กำกวม / ไม่ชัดเจน",
+    "sentence_en": "Don't be so ambiguous.",
+    "sentence_th": "อย่าพูดอะไรกำกวมดิ"
+  },
+  {
+    "word": "amend",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "แก้ไข / ปรับปรุง",
+    "sentence_en": "We need to amend the rules.",
+    "sentence_th": "เราต้องแก้กฎใหม่ละ"
+  },
+  {
+    "word": "analogy",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "การเปรียบเทียบ",
+    "sentence_en": "That's a clever analogy.",
+    "sentence_th": "เป็นการเปรียบเปรยที่เจ๋งมาก"
+  },
+  {
+    "word": "arbitrary",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ตามใจชอบ / สุ่มๆ",
+    "sentence_en": "It was an arbitrary choice.",
+    "sentence_th": "เลือกมาแบบส่งๆ สุ่มๆ อะ"
+  },
+  {
+    "word": "assemble",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ประกอบ / รวมร่าง",
+    "sentence_en": "Assemble the team!",
+    "sentence_th": "รวมทีมด่วน!"
+  },
+  {
+    "word": "assert",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ยืนยัน / แสดงจุดยืน",
+    "sentence_en": "Assert your dominance.",
+    "sentence_th": "แสดงจุดยืนหน่อยดี้"
+  },
+  {
+    "word": "attain",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "บรรลุ / ถึงจุดหมาย",
+    "sentence_en": "Attain your inner peace.",
+    "sentence_th": "เข้าถึงความสงบในใจให้ได้"
+  },
+  {
+    "word": "attribute",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ยกให้เป็นความดีความชอบ",
+    "sentence_en": "Attribute the success to luck.",
+    "sentence_th": "ยกความสำเร็จนี้ให้โชคช่วยละกัน"
+  },
+  {
+    "word": "audit",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ตรวจสอบ / มาส่อง",
+    "sentence_en": "I'll audit the process.",
+    "sentence_th": "เดี๋ยวจะไปส่องดูทุกขั้นตอนเลย"
+  },
+  {
+    "word": "authentic",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ของแท้ / เรียล",
+    "sentence_en": "Just be authentic.",
+    "sentence_th": "ก็แค่เป็นตัวเองแบบเรียลๆ"
+  },
+  {
+    "word": "bias",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "อคติ / ลำเอียง",
+    "sentence_en": "No bias here.",
+    "sentence_th": "ไม่มีลำเอียงแน่นอน"
+  },
+  {
+    "word": "bizarre",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ประหลาด / พิลึก",
+    "sentence_en": "The situation is bizarre.",
+    "sentence_th": "สถานการณ์มันพิลึกจัด"
+  },
+  {
+    "word": "bulk",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ก้อนใหญ่ / ส่วนมาก",
+    "sentence_en": "Buy in bulk to save.",
+    "sentence_th": "ซื้อเหมาเยอะๆ ประหยัดกว่า"
+  },
+  {
+    "word": "capability",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ความสามารถ / เลเวล",
+    "sentence_en": "Show your full capability.",
+    "sentence_th": "โชว์ของออกมาให้หมดเลเวลเลย"
+  },
+  {
+    "word": "chaos",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ความเละเทะ / วุ่นวาย",
+    "sentence_en": "It's pure chaos.",
+    "sentence_th": "วุ่นวายเละเทะไปหมดเเล้ว"
+  },
+  {
+    "word": "coherent",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ฟังดูรู้เรื่อง / เชื่อมโยง",
+    "sentence_en": "Make a coherent plan.",
+    "sentence_th": "ทำแผนให้มันดูรู้เรื่องหน่อย"
+  },
+  {
+    "word": "coincide",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "บังเอิญตรงกัน / ประจวบเหมาะ",
+    "sentence_en": "Our schedules coincide perfectly.",
+    "sentence_th": "ตารางเราว่างตรงกันเป๊ะเลย"
+  },
+  {
+    "word": "collaborate",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ร่วมมือกัน / จอยกัน",
+    "sentence_en": "Let's collaborate on this project.",
+    "sentence_th": "มาจอยโปรเจกต์นี้กันเถอะ"
+  },
+  {
+    "word": "commodity",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "สินค้า / ของใช้",
+    "sentence_en": "Time is a precious commodity.",
+    "sentence_th": "เวลาคือของที่มีค่าที่สุดนะ"
+  },
+  {
+    "word": "complement",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "เติมเต็ม / เสริมกัน",
+    "sentence_en": "Your shoes complement the outfit.",
+    "sentence_th": "รองเท้าเธอเข้ากับชุดมากอะ"
+  },
+  {
+    "word": "comprise",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ประกอบด้วย",
+    "sentence_en": "The team comprises five experts.",
+    "sentence_th": "ทีมเรามีแต่ตัวตึง 5 คน"
+  },
+  {
+    "word": "conceive",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "คิดไอเดีย / นึกภาพออก",
+    "sentence_en": "I can't conceive of such a thing.",
+    "sentence_th": "นึกภาพตามไม่ออกเลยว่ะ"
+  },
+  {
+    "word": "concur",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "เห็นตรงกัน / เห็นด้วย",
+    "sentence_en": "I concur with your opinion.",
+    "sentence_th": "เห็นด้วยกับเธอทุกอย่างเลย"
+  },
+  {
+    "word": "confine",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "จำกัด / กักเขต",
+    "sentence_en": "Don't confine yourself to one style.",
+    "sentence_th": "อย่าจำกัดตัวเองอยู่แค่สไตล์เดียวดิ"
+  },
+  {
+    "word": "conform",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ทำตามกฎ / ปฏิบัติตาม",
+    "sentence_en": "You must conform to the rules.",
+    "sentence_th": "ต้องทำตามกฎเขาหน่อยนะ"
+  },
+  {
+    "word": "consensus",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "มติเอกฉันท์ / ความเห็นส่วนใหญ่",
+    "sentence_en": "We reached a consensus.",
+    "sentence_th": "เราตกลงกันได้เป็นเสียงส่วนใหญ่ละ"
+  },
+  {
+    "word": "constitute",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "จัดเป็น / ก่อให้เกิด",
+    "sentence_en": "This constitutes a violation.",
+    "sentence_th": "แบบนี้จัดว่าทำผิดกฎนะ"
+  },
+  {
+    "word": "constrain",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "บังคับ / จำกัดพื้นที่",
+    "sentence_en": "Don't feel constrained by time.",
+    "sentence_th": "ไม่ต้องรู้สึกโดนบีบด้วยเรื่องเวลาหรอก"
+  },
+  {
+    "word": "contemplate",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "พิจารณา / ไตร่ตรอง",
+    "sentence_en": "I'm contemplating a career change.",
+    "sentence_th": "กำลังคิดๆ เรื่องย้ายสายงานอยู่"
+  },
+  {
+    "word": "contradict",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ขัดแย้ง / พูดไม่ตรงกัน",
+    "sentence_en": "Your actions contradict your words.",
+    "sentence_th": "กับการกระทำเธอมันย้อนแย้งกันนะ"
+  },
+  {
+    "word": "controversy",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ข้อถกเถียง / ดราม่า",
+    "sentence_en": "It caused a huge controversy.",
+    "sentence_th": "เรื่องนี้ดราม่าลงหนักมาก"
+  },
+  {
+    "word": "converge",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "รวมตัว / บรรจบกัน",
+    "sentence_en": "All paths converge here.",
+    "sentence_th": "ทุกทางมันมารวมที่จุดนี้แหละ"
+  },
+  {
+    "word": "convey",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "สื่อสาร / ถ่ายทอดความรู้สึก",
+    "sentence_en": "Convey my thanks to him.",
+    "sentence_th": "ฝากขอบคุณเขาด้วยส่วนหนึ่งนะ"
+  },
+  {
+    "word": "criterion",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "เกณฑ์ / มาตรฐาน",
+    "sentence_en": "What's the main criterion?",
+    "sentence_th": "เกณฑ์สำคัญที่สุดคืออะไรอะ?"
+  },
+  {
+    "word": "crucial",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "สำคัญมาก / ขัดไม่ได้",
+    "sentence_en": "This is a crucial moment.",
+    "sentence_th": "จังหวะนี้แหละสำคัญสุดๆ"
+  },
+  {
+    "word": "deceptive",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "หลอกลวง / ลวงตา",
+    "sentence_en": "Looks can be deceptive.",
+    "sentence_th": "รูปร่างหน้าตามันหลอกกันได้นะ"
+  },
+  {
+    "word": "deduce",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "อนุมาน / สรุปจากข้อมูล",
+    "sentence_en": "We can deduce the truth.",
+    "sentence_th": "เราน่าจะพอเดาความจริงได้ละ"
+  },
+  {
+    "word": "define",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "นิยาม / กำหนดขอบเขต",
+    "sentence_en": "Let's define our roles.",
+    "sentence_th": "มาตกลงหน้าที่กันให้ชัดเจนเหอะ"
+  },
+  {
+    "word": "denote",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "บ่งบอกถึง / หมายถึง",
+    "sentence_en": "Red denotes danger.",
+    "sentence_th": "สีแดงแปลว่าอันตรายจ้า"
+  },
+  {
+    "word": "deprive",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "พรากไป / อด (นอน/ของ)",
+    "sentence_en": "Don't deprive yourself of sleep.",
+    "sentence_th": "อย่าอดหลับอดนอนนักเลย"
+  },
+  {
+    "word": "deviate",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "เบี่ยงเบน / นอกลู่นอกทาง",
+    "sentence_en": "Don't deviate from the plan.",
+    "sentence_th": "อย่าหลุดนอกแผนที่วางไว้นะ"
+  },
+  {
+    "word": "diminish",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ลดลง / ด้อยค่า",
+    "sentence_en": "The pain will diminish.",
+    "sentence_th": "เดี๋ยวความเจ็บก็ค่อยๆ หายไป"
+  },
+  {
+    "word": "discrete",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "แยกจากกันชัดเจน",
+    "sentence_en": "These are discrete issues.",
+    "sentence_th": "มันคนละประเด็นกันเลย"
+  },
+  {
+    "word": "distort",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "บิดเบือน / ผิดเพี้ยน",
+    "sentence_en": "Don't distort the truth.",
+    "sentence_th": "อย่าเอาความจริงมาโกหกกัน"
+  },
+  {
+    "word": "domestic",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ในประเทศ / เกี่ยวกับบ้าน",
+    "sentence_en": "I love domestic flights.",
+    "sentence_th": "ชอบบินในประเทศมันง่ายดี"
+  },
+  {
+    "sentence_en": "She dominates the market.",
+    "sentence_th": "นางคุมตลาดอยู่หมัดเลย"
+  },
+  {
+    "word": "efficiency",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ความเร็ว / ประสิทธิภาพ",
+    "sentence_en": "Improve your work efficiency.",
+    "sentence_th": "ปั่นงานให้ไวและดีขึ้นหน่อย"
+  },
+  {
+    "word": "elaborate",
+    "pos": "adj., v.",
+    "level": "C1",
+    "meaning_th": "ละเอียด / ซับซ้อน / อธิบายเพิ่ม",
+    "sentence_en": "Can you elaborate on that?",
+    "sentence_th": "ช่วยขยี้ตรงนี้เพิ่มหน่อยสิ"
+  },
+  {
+    "word": "elegant",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ดูแพง / สง่างาม",
+    "sentence_en": "She looks so elegant tonight.",
+    "sentence_th": "คืนนี้นางดูสวยแพงมากอะ"
+  },
+  {
+    "word": "embark",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "เริ่ม (โปรเจกต์/การเดินทาง)",
+    "sentence_en": "Embark on a new journey.",
+    "sentence_th": "เริ่มออกไปหาอะไรใหม่ๆ ทำกัน"
+  },
+  {
+    "word": "emphasize",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "เน้นย้ำ / ขยี้จุด",
+    "sentence_en": "I want to emphasize this point.",
+    "sentence_th": "อยากจะเน้นย้ำตรงจุดนี้จริงๆ"
+  },
+  {
+    "word": "empirical",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "จากประสบการณ์จริง / มีหลักฐาน",
+    "sentence_en": "We need empirical evidence.",
+    "sentence_th": "เราต้องเห็นของจริง หลักฐานจริง"
+  },
+  {
+    "word": "enable",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ทำให้ทำได้ / ปลดล็อก",
+    "sentence_en": "Enable the new feature.",
+    "sentence_th": "กดปลดล็อกฟีเจอร์ใหม่เลย"
+  },
+  {
+    "word": "encounter",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "เจอ (ปัญหา/คน)",
+    "sentence_en": "I encountered a weird glitch.",
+    "sentence_th": "ตะกี้เจอแอปฯ บัคแปลกๆ ว่ะ"
+  },
+  {
+    "word": "enforce",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "บังคับใช้ / เฮี้ยบ",
+    "sentence_en": "Enforce the rules strictly.",
+    "sentence_th": "คุมกฎให้มันเฮี้ยบๆ หน่อย"
+  },
+  {
+    "word": "engage",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "มีส่วนร่วม / คุยด้วย",
+    "sentence_en": "Engage with your audience.",
+    "sentence_th": "คุยกับคนดูบ่อยๆ นะ"
+  },
+  {
+    "word": "enhance",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "เพิ่มระดับ / ทำให้ดีขึ้น",
+    "sentence_en": "Enhance your photos.",
+    "sentence_th": "แต่งรูปให้มันสวยขึ้นดิ"
+  },
+  {
+    "word": "enormous",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ใหญ่โต / มหาศาล",
+    "sentence_en": "That's an enormous task.",
+    "sentence_th": "งานช้างเอาเรื่องเลยนะเนี่ย"
+  },
+  {
+    "word": "ensure",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ทำให้แน่ใจ / คอนเฟิร์ม",
+    "sentence_en": "Ensure everything is ready.",
+    "sentence_th": "เช็กให้ชัวร์ว่าพร้อมทุกอย่างแล้ว"
+  },
+  {
+    "word": "entity",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ตัวตน / นิติบุคคล",
+    "sentence_en": "The business is a legal entity.",
+    "sentence_th": "ธุรกิจนี้มันมีตัวตนทางกฎหมายนะ"
+  },
+  {
+    "word": "entrepreneur",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "เจ้าของธุรกิจ / สตาร์ทอัพ",
+    "sentence_en": "He's a young entrepreneur.",
+    "sentence_th": "เขาเป็นเจ้าของสตาร์ทอัพรุ่นใหม่"
+  },
+  {
+    "word": "envisage",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "นึกภาพไว้ / คาดการณ์",
+    "sentence_en": "I envisage a bright future.",
+    "sentence_th": "นึกภาพไว้อยู่นะว่าอนาคตต้องปัง"
+  },
+  {
+    "word": "equation",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "สมการ / ปัจจัย",
+    "sentence_en": "That changes the whole equation.",
+    "sentence_th": "นั่นเปลี่ยนทุกอย่างที่คิดไว้เลย"
+  },
+  {
+    "word": "equip",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ติดตั้ง / เตรียมพร้อม",
+    "sentence_en": "Equip yourself with knowledge.",
+    "sentence_th": "เตรียมความรู้ไว้ให้พร้อม"
+  },
+  {
+    "word": "era",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ยุคสมัย / ช่วงเวลา",
+    "sentence_en": "It's the end of an era.",
+    "sentence_th": "หมดช่วงเวลาของยุคนั้นแล้วล่ะ"
+  },
+  {
+    "word": "eradicate",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "กำจัดให้สิ้นซาก",
+    "sentence_en": "Eradicate the virus.",
+    "sentence_th": "ลบไวรัสทิ้งให้เกลี้ยงเลย"
+  },
+  {
+    "word": "erosion",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "การกัดกร่อน / เสื่อมถอย",
+    "sentence_en": "Beach erosion is serious.",
+    "sentence_th": "ชายหาดโดนกัดเซาะหนักมากนะนั่น"
+  },
+  {
+    "word": "essence",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "แก่นแท้ / หัวใจหลัก",
+    "sentence_en": "That's the essence of it.",
+    "sentence_th": "นั่นแหละคือหัวใจหลักของเรื่อง"
+  },
+  {
+    "word": "establish",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ก่อตั้ง / เซตระบบ",
+    "sentence_en": "Establish a new routine.",
+    "sentence_th": "เซตตารางชีวิตใหม่กันเถอะ"
+  },
+  {
+    "word": "estate",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "อสังหาฯ / ที่ดิน",
+    "sentence_en": "He works in real estate.",
+    "sentence_th": "เขาทำพวกอสังหาฯ น่ะ"
+  },
+  {
+    "word": "estimate",
+    "pos": "v., n.",
+    "level": "C1",
+    "meaning_th": "กะคร่าวๆ / ประเมิน",
+    "sentence_en": "Give me an estimate.",
+    "sentence_th": "ขอยอดคร่าวๆ หน่อยดิ"
+  },
+  {
+    "word": "ethical",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "มีจรรยาบรรณ / ถูกศีลธรรม",
+    "sentence_en": "That's not an ethical move.",
+    "sentence_th": "ทำแบบนี้มันไม่ถูกจรรยาบรรณนะ"
+  },
+  {
+    "word": "ethnic",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "พื้นเมือง / ชาติพันธุ์",
+    "sentence_en": "I love ethnic food.",
+    "sentence_th": "ชอบกินอาหารพื้นเมืองแปลกๆ ดี"
+  },
+  {
+    "word": "evaluate",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ประเมินผล / เช็กเรตติ้ง",
+    "sentence_en": "Evaluate the results correctly.",
+    "sentence_th": "ประเมินผลลัพธ์ให้มันเป๊ะๆ หน่อย"
+  },
+  {
+    "word": "evident",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ชัดแจ้ง / ใครๆ ก็เห็น",
+    "sentence_en": "It was evident to everyone.",
+    "sentence_th": "ใครๆ เขาก็เห็นกันทั้งนั้นแหละ"
+  },
+  {
+    "word": "evolution",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "วิวัฒนาการ / การพัฒนา",
+    "sentence_en": "Witness the evolution.",
+    "sentence_th": "มาดูพัฒนาการของมันกัน"
+  },
+  {
+    "word": "exaggerate",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "พูดเกินจริง / โอเวอร์",
+    "sentence_en": "Don't exaggerate the facts.",
+    "sentence_th": "อย่าพูดอะไรให้มันโอเวอร์นักเลย"
+  },
+  {
+    "word": "exceeed",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "เกินคาด / ทะลุเป้า",
+    "sentence_en": "Exceed your expectations.",
+    "sentence_th": "ทำให้มันดีทะลุเป้าที่หวังไว้"
+  },
+  {
+    "word": "exception",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ข้อยกเว้น / กรณีพิเศษ",
+    "sentence_en": "Make an exception this time.",
+    "sentence_th": "ขอเป็นกรณีพิเศษครั้งนี้ครั้งเดียว"
+  },
+  {
+    "word": "excessive",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "เยอะเกินไป / ฟุ่มเฟือย",
+    "sentence_en": "Excessive noise is annoying.",
+    "sentence_th": "เสียงดังเกินมันก็น่ารำคาญนะ"
+  },
+  {
+    "word": "exclude",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ไม่รวม / คัดออก",
+    "sentence_en": "Exclude them from the list.",
+    "sentence_th": "คัดชื่อพวกนั้นออกจากลิสต์ไปเลย"
+  },
+  {
+    "word": "exclusive",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "เฉพาะกลุ่ม / พรีเมียมสุดๆ",
+    "sentence_en": "It's an exclusive club.",
+    "sentence_th": "คลับนี้มันพรีเมียมเฉพาะกลุ่มนะ"
+  },
+  {
+    "word": "execute",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ลงมือทำ / รันโปรแกรม",
+    "sentence_en": "Execute the plan perfectly.",
+    "sentence_th": "ทำตามแผนที่วางไว้ให้เป๊ะ"
+  },
+  {
+    "word": "exhibit",
+    "pos": "v., n.",
+    "level": "C1",
+    "meaning_th": "โชว์ / นิทรรศการ",
+    "sentence_en": "Exhibit your talent.",
+    "sentence_th": "โชว์ของออกมาให้เขาเห็นหน่อย"
+  },
+  {
+    "word": "expand",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ขยายสาขา / เพิ่มขนาด",
+    "sentence_en": "Expand your horizon.",
+    "sentence_th": "เปิดหูเปิดตาให้กว้างเข้าไว้"
+  },
+  {
+    "word": "expect",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "หวังว่า / คาดว่า",
+    "sentence_en": "What do you expect?",
+    "sentence_th": "แล้วเธอหวังอะไรอีกล่ะ?"
+  },
+  {
+    "word": "expose",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "แฉ / เปิดเผย",
+    "sentence_en": "Expose the truth.",
+    "sentence_th": "แฉความจริงออกมาให้หมด"
+  },
+  {
+    "word": "extend",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "ต่ออายุ / ยืดเวลา",
+    "sentence_en": "Extend the deadline.",
+    "sentence_th": "ขอเลื่อนเดดไลน์ไปก่อนนะ"
+  },
+  {
+    "word": "external",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "ภายนอก / นอกออฟฟิศ",
+    "sentence_en": "External factors matter too.",
+    "sentence_th": "ปัจจัยภายนอกมันก็สำคัญนะ"
+  },
+  {
+    "word": "extract",
+    "pos": "v., n.",
+    "level": "C1",
+    "meaning_th": "ดึงออกมา / สารสกัด",
+    "sentence_en": "Extract the useful data.",
+    "sentence_th": "ดึงเอาเฉพาะข้อมูลที่ใช้ได้ออกมา"
+  },
+  {
+    "word": "extreme",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "สุดๆ / ขั้นสุด",
+    "sentence_en": "That's an extreme case.",
+    "sentence_th": "เคสนี้มันสุดโต่งเกินไปว่ะ"
+  },
+  {
+    "word": "facade",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ภาพลักษณ์ภายนอก / หน้ากาก",
+    "sentence_en": "Strip away the facade.",
+    "sentence_th": "กระชากหน้ากากนั่นทิ้งซะ"
+  },
+  {
+    "word": "facilitate",
+    "pos": "v.",
+    "level": "C1",
+    "meaning_th": "อำนวยความสะดวก",
+    "sentence_en": "Facilitate the meeting.",
+    "sentence_th": "รันประชุมให้มันสมูทหน่อย"
+  },
+  {
+    "word": "factor",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ปัจจัยหลัก",
+    "sentence_en": "That's a major factor.",
+    "sentence_th": "นั่นแหละคือปัจจัยหลักเลย"
+  },
+  {
+    "word": "faculty",
+    "pos": "n.",
+    "level": "C1",
+    "meaning_th": "ความสามารถ / คณาจารย์",
+    "sentence_en": "Use all your faculties.",
+    "sentence_th": "ใช้ความสามารถที่มีให้คุ้มนะ"
+  },
+  {
+    "word": "feasible",
+    "pos": "adj.",
+    "level": "C1",
+    "meaning_th": "เป็นไปได้จริง / ทำได้จริง",
+    "sentence_en": "Is it feasible?",
+    "sentence_th": "มันเป็นไปได้จริงป่ะ?"
+  },
+  {
     "word": "a",
     "pos": "indefinite article",
     "level": "A1",
