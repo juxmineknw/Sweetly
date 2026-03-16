@@ -6,7 +6,7 @@ import {
   Trash2, X, ChevronRight, CheckCircle2, AlertCircle, 
   Trophy, Flame, Award, Zap, Star, Layout, 
   ArrowRight, RefreshCw, BookOpen, Clock, Heart,
-  Volume2, Mic
+  Volume2, Mic, Square
 } from 'lucide-react';
 
 const speakText = (text, lang = 'en-US') => {
@@ -194,6 +194,13 @@ function App() {
     localStorage.setItem('sweetly_last_xp_date', new Date().toDateString());
   }, [dailyXp]);
   useEffect(() => localStorage.setItem('sweetly_daily_goal', dailyGoal.toString()), [dailyGoal]);
+
+  // Stop audio on tab change
+  useEffect(() => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  }, [currentTab]);
 
   const addXp = (amount) => {
     setXp(prev => prev + amount);
@@ -1745,7 +1752,7 @@ function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center gap-10">
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex gap-4">
           <button 
             onClick={() => {
               const textToSpeak = labMode === 'reading' ? question.text : 
@@ -1756,6 +1763,14 @@ function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
             className="w-32 h-32 rounded-full bg-linear-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all group"
           >
             <Volume2 size={56} className="group-hover:animate-pulse" />
+          </button>
+          
+          <button 
+            onClick={() => window.speechSynthesis && window.speechSynthesis.cancel()}
+            className="w-16 h-32 rounded-3xl bg-white text-rose-500 flex items-center justify-center shadow-xl border border-rose-50 hover:bg-rose-50 transition-all group"
+            title="Stop Audio"
+          >
+            <Square size={28} />
           </button>
         </div>
 
