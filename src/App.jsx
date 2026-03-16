@@ -353,8 +353,8 @@ function HomeView({ knownWords, unknownWords, resetProgress, xp, achievements, s
     if (selectedCategory === 'All') {
       acc.push(idx);
     } else {
-      const levelMatch = word && word.level === selectedCategory;
-      const posMatch = word && word.pos && word.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''));
+      const levelMatch = word.level === selectedCategory;
+      const posMatch = word.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''));
       if (levelMatch || posMatch) acc.push(idx);
     }
     return acc;
@@ -1558,6 +1558,7 @@ function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [readingResult, setReadingResult] = useState([]); // Array of { word: string, status: 'idle' | 'correct' | 'wrong' }
+  const [showTranslation, setShowTranslation] = useState(false);
 
   const generateQuestion = useCallback((mode = labMode) => {
     if (mode === 'reading') {
@@ -1567,12 +1568,14 @@ function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
       setUserInput('');
       setIsCorrect(null);
       setTranscript('');
+      setShowTranslation(false);
+      setTimeout(() => speakText(target.text), 500);
       return;
     }
 
     let pool = wordsData.map((w, i) => ({ ...w, index: i }));
     if (selectedCategory !== 'All') {
-      pool = pool.filter(w => w.level === selectedCategory || (w && w.pos && w.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', ''))));
+      pool = pool.filter(w => w.level === selectedCategory || w.pos.toLowerCase().includes(selectedCategory.toLowerCase().replace('.', '')));
     }
     
     if (pool.length === 0) return;
@@ -1639,60 +1642,47 @@ function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("เบราว์เซอร์ของคุณไม่รองรับการสั่งงานด้วยเสียง กรุณาลองใช้ Chrome หรือ Safari เวอร์ชั่นล่าสุดครับ");
+      alert("Your browser doesn't support speech recognition. Try Chrome!");
       return;
     }
 
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-      recognition.continuous = false; // Important for mobile to stop after speaking
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
 
-      recognition.onstart = () => {
-        setIsListening(true);
-        setTranscript('');
-      };
+    recognition.onstart = () => {
+      setIsListening(true);
+      setTranscript('');
+    };
 
-      recognition.onresult = (event) => {
-        const current = event.resultIndex;
-        const resultTranscript = event.results[current][0].transcript;
-        setTranscript(resultTranscript);
+    recognition.onresult = (event) => {
+      const current = event.resultIndex;
+      const resultTranscript = event.results[current][0].transcript;
+      setTranscript(resultTranscript);
 
-        if (labMode === 'reading' && question) {
-          const spokenWords = resultTranscript.toLowerCase().split(' ');
-          setReadingResult(prev => prev.map(item => {
-            if (item.status === 'correct') return item;
-            const cleanPassageWord = item.word.toLowerCase().replace(/[.,?!]/g, '');
-            if (spokenWords.includes(cleanPassageWord)) {
-              return { ...item, status: 'correct' };
-            }
-            return item;
-          }));
-        }
-      };
+      if (labMode === 'reading' && question) {
+        const spokenWords = resultTranscript.toLowerCase().split(' ');
+        setReadingResult(prev => prev.map(item => {
+          if (item.status === 'correct') return item;
+          const cleanPassageWord = item.word.toLowerCase().replace(/[.,?!]/g, '');
+          if (spokenWords.includes(cleanPassageWord)) {
+            return { ...item, status: 'correct' };
+          }
+          return item;
+        }));
+      }
+    };
 
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        if (event.error === 'not-allowed') {
-          alert("กรุณาอนุญาตให้เข้าถึงไมโครโฟนในการตั้งค่าเบราว์เซอร์ของคุณด้วยครับ");
-        } else if (event.error === 'network') {
-          alert("เกิดปัญหาเกี่ยวกับเครือข่าย กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตครับ");
-        }
-        setIsListening(false);
-      };
-
-      recognition.start();
-    } catch (err) {
-      console.error('Failed to start recognition:', err);
+    recognition.onend = () => {
       setIsListening(false);
-      alert("ไม่สามารถเริ่มการทำงานของไมโครโฟนได้ กรุณาลองใหม่อีกครั้งครับ");
-    }
+    };
+
+    recognition.onerror = (event) => {
+      console.error(event.error);
+      setIsListening(false);
+    };
+
+    recognition.start();
   };
 
   const startMode = (mode) => {
@@ -1757,7 +1747,12 @@ function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
       <div className="flex-1 flex flex-col items-center justify-center gap-10">
         <div className="flex flex-col items-center gap-6">
           <button 
-            onClick={() => speakText(labMode === 'dictate' ? question.sentence_en : question.word)}
+            onClick={() => {
+              const textToSpeak = labMode === 'reading' ? question.text : 
+                                 labMode === 'dictate' ? question.sentence_en : 
+                                 question.word;
+              speakText(textToSpeak);
+            }}
             className="w-32 h-32 rounded-full bg-linear-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all group"
           >
             <Volume2 size={56} className="group-hover:animate-pulse" />
@@ -1851,10 +1846,26 @@ function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{question.level} Level</p>
               </div>
 
-              <div className="bg-white p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-sm leading-relaxed text-lg font-medium text-slate-600 w-full text-justify relative group">
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                   <button onClick={() => alert(question.translation)} className="p-2 rounded-full bg-slate-50 text-slate-400 hover:text-indigo-500 hover:bg-white shadow-sm transition-all">🌏</button>
+              <div className="bg-white p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-sm leading-relaxed text-lg font-medium text-slate-600 w-full text-justify relative overflow-hidden">
+                <div className="absolute top-4 right-4 z-20">
+                   <button 
+                     onClick={() => setShowTranslation(!showTranslation)} 
+                     className={`p-2 rounded-full transition-all duration-300 ${showTranslation ? 'bg-indigo-500 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:text-indigo-500 hover:bg-white shadow-sm'}`}
+                   >
+                     <BookOpen size={18} />
+                   </button>
                 </div>
+
+                {showTranslation && (
+                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-white via-white/95 to-transparent p-6 pt-10 animate-in slide-in-from-bottom-4 duration-300 z-10">
+                    <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+                      <p className="text-sm font-bold text-indigo-600 leading-relaxed italic">
+                        {question.translation}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {readingResult.map((item, idx) => {
                   let colorClass = "text-slate-400";
                   if (item.status === 'correct') colorClass = "text-emerald-500 font-bold";
@@ -1884,13 +1895,6 @@ function ListeningLabView({ addXp, triggerFeedback, selectedCategory }) {
                   </button>
                 </div>
                 
-                {transcript && (
-                  <div className="text-center animate-in fade-in zoom-in duration-300 max-w-sm">
-                    <p className="text-xs font-black text-slate-300 uppercase tracking-widest mb-2">Heard</p>
-                    <p className="text-slate-600 font-bold italic">"{transcript}"</p>
-                  </div>
-                )}
-
                 <button 
                   onClick={() => {
                     const finalResult = readingResult.map(item => ({
